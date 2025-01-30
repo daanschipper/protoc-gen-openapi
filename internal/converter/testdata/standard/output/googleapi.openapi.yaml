@@ -166,8 +166,9 @@ paths:
       operationId: io.swagger.petstore.v2.Foo.GetMessage
       parameters:
         - name: name
-          in: query
+          in: path
           description: Mapped to URL path.
+          required: true
           schema:
             type: string
             title: name
