@@ -15,7 +15,27 @@ service Foo {
     option (google.api.http).get = "/v1/{property_in_path_ok}/{parentMsg.property_in_path}/foo";
   }
 
+  rpc Foo3(Foo3Request) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/foo3"
+      body: "data"
+    };
+  }
+
+  rpc Foo4(Foo3Request) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/foo4"
+      body: "data.text"
+    };
+  }
+
   rpc Masky(MaskyRequest) returns (google.protobuf.Empty) {}
+
+  rpc GetMessage(GetMessageRequest) returns (Message) {
+    option (google.api.http) = {
+      get: "/v1/{name=messages/*}" // maps "GET /v1/messages/1234" to the request object {name: "messages/1234"}
+    };
+  }
 }
 
 message MaskyRequest {
@@ -27,9 +47,22 @@ message Foo2Request {
   Something parentMsg = 2;
   string property_in_query_ok = 3;
 }
+
+message Foo3Request {
+  Message data = 2;
+}
+
 message Something {
   string property_in_path = 1;
   string property_in_query = 2;
+  Message data = 3;
 }
 
 message Foo2Response {}
+
+message GetMessageRequest {
+  string name = 1; // Mapped to URL path.
+}
+message Message {
+  string text = 1; // The resource content.
+}

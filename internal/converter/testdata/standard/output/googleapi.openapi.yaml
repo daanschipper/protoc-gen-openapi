@@ -46,6 +46,13 @@ paths:
           schema:
             type: string
             title: property_in_query
+        - name: parentMsg.data.text
+          in: query
+          description: The resource content.
+          schema:
+            type: string
+            title: text
+            description: The resource content.
         - name: propertyInQueryOk
           in: query
           schema:
@@ -64,6 +71,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/io.swagger.petstore.v2.Foo2Response'
+  /foo3:
+    post:
+      tags:
+        - io.swagger.petstore.v2.Foo
+      summary: Foo3
+      operationId: io.swagger.petstore.v2.Foo.Foo3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/io.swagger.petstore.v2.Message'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google.protobuf.Empty'
+  /foo4:
+    post:
+      tags:
+        - io.swagger.petstore.v2.Foo
+      summary: Foo4
+      operationId: io.swagger.petstore.v2.Foo.Foo4
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              title: text
+              description: The resource content.
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google.protobuf.Empty'
   /io.swagger.petstore.v2.Foo/Masky:
     post:
       tags:
@@ -99,6 +158,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/google.protobuf.Empty'
+  /v1/{name=messages/*}:
+    get:
+      tags:
+        - io.swagger.petstore.v2.Foo
+      summary: GetMessage
+      operationId: io.swagger.petstore.v2.Foo.GetMessage
+      parameters:
+        - name: name
+          in: query
+          description: Mapped to URL path.
+          schema:
+            type: string
+            title: name
+            description: Mapped to URL path.
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/io.swagger.petstore.v2.Message'
 components:
   schemas:
     google.protobuf.Empty:
@@ -332,6 +418,24 @@ components:
       type: object
       title: Foo2Response
       additionalProperties: false
+    io.swagger.petstore.v2.Foo3Request:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/io.swagger.petstore.v2.Message'
+          title: data
+      title: Foo3Request
+      additionalProperties: false
+    io.swagger.petstore.v2.GetMessageRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+          description: Mapped to URL path.
+      title: GetMessageRequest
+      additionalProperties: false
     io.swagger.petstore.v2.MaskyRequest:
       type: object
       properties:
@@ -340,6 +444,15 @@ components:
             - $ref: '#/components/schemas/google.protobuf.FieldMask'
           title: fields
       title: MaskyRequest
+      additionalProperties: false
+    io.swagger.petstore.v2.Message:
+      type: object
+      properties:
+        text:
+          type: string
+          title: text
+          description: The resource content.
+      title: Message
       additionalProperties: false
     io.swagger.petstore.v2.Something:
       type: object
@@ -350,6 +463,10 @@ components:
         propertyInQuery:
           type: string
           title: property_in_query
+        data:
+          allOf:
+            - $ref: '#/components/schemas/io.swagger.petstore.v2.Message'
+          title: data
       title: Something
       additionalProperties: false
     encoding:

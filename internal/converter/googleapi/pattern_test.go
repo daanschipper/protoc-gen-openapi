@@ -48,6 +48,18 @@ func TestRunPathPatternLexer(t *testing.T) {
 		}, v)
 	})
 
+	t.Run("with-double-wildcard", func(t *testing.T) {
+		v, err := googleapi.RunPathPatternLexer("/test/**")
+		require.NoError(t, err)
+		assert.Equal(t, []googleapi.Token{
+			{Type: "SLASH", Value: "/"},
+			{Type: "IDENT", Value: "test"},
+			{Type: "SLASH", Value: "/"},
+			{Type: "LITERAL", Value: "**"},
+			{Type: "EOF"},
+		}, v)
+	})
+
 	t.Run("with-wildcard", func(t *testing.T) {
 		v, err := googleapi.RunPathPatternLexer("/test/**")
 		require.NoError(t, err)

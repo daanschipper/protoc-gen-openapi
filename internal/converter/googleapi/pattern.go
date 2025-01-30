@@ -2,6 +2,7 @@ package googleapi
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"unicode"
 )
@@ -59,6 +60,7 @@ func RunPathPatternLexer(input string) ([]Token, error) {
 			} else if isIdentStart(rune(word[0])) {
 				tokens = append(tokens, Token{Type: TokenIdent, Value: word})
 			} else {
+				slog.Warn("isVariable", "isvar", isVariable(word), "word", word)
 				return nil, fmt.Errorf("unrecognized word at position: %d: %s", pos, word)
 			}
 			pos += len(word)
@@ -75,8 +77,15 @@ func RunPathPatternLexer(input string) ([]Token, error) {
 // Helper function to extract a word starting from a given position in the input.
 func getWord(input []rune) string {
 	var word []rune
+	inVariable := false
 	for i, char := range input {
-		if char == '/' {
+		if char == '{' {
+			inVariable = true
+		}
+		if char == '}' {
+			inVariable = false
+		}
+		if char == '/' && !inVariable {
 			break
 		}
 		word = append(word, char)

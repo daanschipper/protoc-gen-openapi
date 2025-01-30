@@ -94,6 +94,8 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 				Description: util.FormatComments(loc),
 				Schema:      schema.FieldToSchema(opts, nil, field),
 			})
+		} else {
+			slog.Warn("field referenced by (google.api.http) not found", slog.String("method", method), slog.String("path", template))
 		}
 	}
 
@@ -114,18 +116,19 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 			s := base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(inputName))
 			op.RequestBody = util.MethodToRequestBody(opts, md, s, false)
 		}
-
 	default:
-		fields := md.Input().Fields()
-		for i := 0; i < fields.Len(); i++ {
-			field := fields.Get(i)
-			if field.JSONName() != rule.Body {
-				continue
+		field, _ := resolveField(md.Input(), rule.Body)
+		if field != nil {
+			var s *base.SchemaProxy
+			if field.Kind() == protoreflect.MessageKind {
+				msg := field.Message()
+				s = base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(string(msg.FullName())))
+			} else {
+				s = schema.FieldToSchema(opts, nil, field)
 			}
-			loc := fd.SourceLocations().ByDescriptor(field)
-			op.RequestBody = &v3.RequestBody{
-				Description: util.FormatComments(loc),
-			}
+			op.RequestBody = util.MethodToRequestBody(opts, md, s, false)
+		} else {
+			slog.Warn("field referenced by (google.api.http).body not found", slog.String("body", rule.Body))
 		}
 	}
 
@@ -189,9 +192,11 @@ func resolveField(md protoreflect.MessageDescriptor, param string) (protoreflect
 	current := md
 	var fd protoreflect.FieldDescriptor
 	for _, paramPart := range strings.Split(param, ".") {
+		slog.Info("resolveField", "paramPart", paramPart)
 		if field := fieldByName(current, paramPart); field == nil {
 			return nil, nil
 		} else {
+			slog.Info("resolveField", "field", field.FullName())
 			fd = field
 			jsonParts = append(jsonParts, fd.JSONName())
 			current = field.Message()
