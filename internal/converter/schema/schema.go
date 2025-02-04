@@ -40,11 +40,7 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 	fields := tt.Fields()
 	for i := range fields.Len() {
 		field := fields.Get(i)
-		if oneOf := field.ContainingOneof(); oneOf != nil {
-			oneOneGroups[oneOf.FullName()] = append(oneOneGroups[oneOf.FullName()], field)
-		} else {
-			props.Set(util.MakeFieldName(opts, field), FieldToSchema(opts, base.CreateSchemaProxy(s), field))
-		}
+		props.Set(util.MakeFieldName(opts, field), FieldToSchema(opts, base.CreateSchemaProxy(s), field))
 	}
 
 	s.Properties = props
