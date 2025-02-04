@@ -152,15 +152,6 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 
 	op.Responses = &v3.Responses{
 		Codes: codeMap,
-		Default: &v3.Response{
-			Description: "Error",
-			Content: util.MakeMediaTypes(
-				opts,
-				base.CreateSchemaProxyRef("#/components/schemas/connect.error"),
-				false,
-				false,
-			),
-		},
 	}
 
 	switch method {
