@@ -1,20 +1,49 @@
 package converter
 
 import (
-	"github.com/pb33f/libopenapi/datamodel/high/base"
-	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
-	"github.com/pb33f/libopenapi/orderedmap"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/descriptorpb"
-
 	"github.com/daanschipper/protoc-gen-openapi/internal/converter/gnostic"
 	"github.com/daanschipper/protoc-gen-openapi/internal/converter/googleapi"
 	"github.com/daanschipper/protoc-gen-openapi/internal/converter/options"
 	"github.com/daanschipper/protoc-gen-openapi/internal/converter/util"
+	oasExtension "github.com/daanschipper/protoc-gen-openapi/openapi"
+	"github.com/pb33f/libopenapi/datamodel/high/base"
+	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, paths *v3.Paths) error {
 	services := fd.Services()
+
+	// Check if any method uses the extension OpenApiOptions
+	filterPublic := false
+	for i := 0; i < services.Len(); i++ {
+		if filterPublic {
+			break
+		}
+
+		methods := services.Get(i).Methods()
+		for j := 0; j < methods.Len(); j++ {
+			method := methods.Get(j)
+
+			openApiOptionsExtension := proto.GetExtension(method.Options(), oasExtension.E_MethodParams)
+
+			if openApiOptionsExtension == nil {
+				continue
+			}
+
+			if openApiOptionsExtension == oasExtension.E_MethodParams.InterfaceOf(oasExtension.E_MethodParams.Zero()) {
+				continue
+			}
+
+			// option used!
+			filterPublic = true
+			break
+		}
+	}
+
 	for i := 0; i < services.Len(); i++ {
 		service := services.Get(i)
 		if !opts.HasService(service.FullName()) {
@@ -23,6 +52,24 @@ func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, 
 		methods := service.Methods()
 		for j := 0; j < methods.Len(); j++ {
 			method := methods.Get(j)
+
+			openApiOptionsExtension := proto.GetExtension(method.Options(), oasExtension.E_MethodParams)
+
+			if filterPublic {
+				if openApiOptionsExtension == nil {
+					continue
+				}
+
+				if openApiOptionsExtension == oasExtension.E_MethodParams.InterfaceOf(oasExtension.E_MethodParams.Zero()) {
+					continue
+				}
+
+				openApiOptions := openApiOptionsExtension.(*oasExtension.OpenApiOptions)
+				if !openApiOptions.GetPublic() {
+					continue
+				}
+			}
+
 			pathItems := googleapi.MakePathItems(opts, method)
 
 			// Helper function to update or set path items
