@@ -4,6 +4,8 @@ import (
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
+	oasExtension "github.com/sudorandom/protoc-gen-connect-openapi/openapi"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 
@@ -23,6 +25,23 @@ func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, 
 		methods := service.Methods()
 		for j := 0; j < methods.Len(); j++ {
 			method := methods.Get(j)
+
+			if opts.FilterPublic == true {
+				openApiOptionsExtension := proto.GetExtension(method.Options(), oasExtension.E_MethodParams)
+				if openApiOptionsExtension == nil {
+					continue
+				}
+
+				if openApiOptionsExtension == oasExtension.E_MethodParams.InterfaceOf(oasExtension.E_MethodParams.Zero()) {
+					continue
+				}
+
+				openApiOptions := openApiOptionsExtension.(*oasExtension.OpenApiOptions)
+				if !openApiOptions.GetPublic() {
+					continue
+				}
+			}
+
 			pathItems := googleapi.MakePathItems(opts, method)
 
 			// Helper function to update or set path items

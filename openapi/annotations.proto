@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package openapi;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/sudorandom/protoc-gen-connect-openapi/openapi;openapi";
+
+message OpenApiOptions {
+  optional bool public = 1;
+}
+
+extend google.protobuf.MethodOptions {
+  OpenApiOptions method_params = 2506;
+}
