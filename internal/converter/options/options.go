@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/annotations"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/annotations"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter"
 	"log/slog"
 	"os"
 	"runtime"
@@ -11,7 +12,6 @@ import (
 	pluginpb "google.golang.org/protobuf/types/pluginpb"
 
 	"github.com/lmittmann/tint"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter"
 )
 
 var (
