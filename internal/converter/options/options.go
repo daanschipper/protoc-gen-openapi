@@ -47,6 +47,7 @@ type Options struct {
 	TrimConnectRPC bool
 	// No oneOf for optional fields
 	ExplicitOptionalFields bool
+	FilterPublic           bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -110,6 +111,8 @@ func FromString(s string) (Options, error) {
 			opts.WithServiceDescriptions = true
 		case param == "ignore-googleapi-http":
 			opts.IgnoreGoogleapiHTTP = true
+		case param == "filter-public":
+			opts.FilterPublic = true
 		case strings.HasPrefix(param, "content-types="):
 			for _, contentType := range strings.Split(param[14:], ";") {
 				contentType = strings.TrimSpace(contentType)
