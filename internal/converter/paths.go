@@ -251,7 +251,10 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 	})
 	op.Responses = &v3.Responses{
 		Codes: codeMap,
-		Default: &v3.Response{
+	}
+
+	if !opts.TrimConnectRPC {
+		op.Responses.Default = &v3.Response{
 			Description: "Error",
 			Content: util.MakeMediaTypes(
 				opts,
@@ -259,22 +262,22 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 				false,
 				isStreaming,
 			),
-		},
-	}
+		}
 
-	op.Parameters = append(op.Parameters,
-		&v3.Parameter{
-			Name:     "Connect-Protocol-Version",
-			In:       "header",
-			Required: util.BoolPtr(true),
-			Schema:   base.CreateSchemaProxyRef("#/components/schemas/connect-protocol-version"),
-		},
-		&v3.Parameter{
-			Name:   "Connect-Timeout-Ms",
-			In:     "header",
-			Schema: base.CreateSchemaProxyRef("#/components/schemas/connect-timeout-header"),
-		},
-	)
+		op.Parameters = append(op.Parameters,
+			&v3.Parameter{
+				Name:     "Connect-Protocol-Version",
+				In:       "header",
+				Required: util.BoolPtr(true),
+				Schema:   base.CreateSchemaProxyRef("#/components/schemas/connect-protocol-version"),
+			},
+			&v3.Parameter{
+				Name:   "Connect-Timeout-Ms",
+				In:     "header",
+				Schema: base.CreateSchemaProxyRef("#/components/schemas/connect-timeout-header"),
+			},
+		)
+	}
 
 	// Request parameters
 	inputId := util.FormatTypeRef(string(method.Input().FullName()))
@@ -290,28 +293,34 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 					true,
 					isStreaming),
 			},
-			&v3.Parameter{
-				Name:     "encoding",
-				In:       "query",
-				Required: util.BoolPtr(true),
-				Schema:   base.CreateSchemaProxyRef("#/components/schemas/encoding"),
-			},
-			&v3.Parameter{
-				Name:   "base64",
-				In:     "query",
-				Schema: base.CreateSchemaProxyRef("#/components/schemas/base64"),
-			},
-			&v3.Parameter{
-				Name:   "compression",
-				In:     "query",
-				Schema: base.CreateSchemaProxyRef("#/components/schemas/compression"),
-			},
-			&v3.Parameter{
-				Name:   "connect",
-				In:     "query",
-				Schema: base.CreateSchemaProxyRef("#/components/schemas/connect"),
-			},
 		)
+
+		// Add default ConnectRPC parameters.
+		if !opts.TrimConnectRPC {
+			op.Parameters = append(op.Parameters,
+				&v3.Parameter{
+					Name:     "encoding",
+					In:       "query",
+					Required: util.BoolPtr(true),
+					Schema:   base.CreateSchemaProxyRef("#/components/schemas/encoding"),
+				},
+				&v3.Parameter{
+					Name:   "base64",
+					In:     "query",
+					Schema: base.CreateSchemaProxyRef("#/components/schemas/base64"),
+				},
+				&v3.Parameter{
+					Name:   "compression",
+					In:     "query",
+					Schema: base.CreateSchemaProxyRef("#/components/schemas/compression"),
+				},
+				&v3.Parameter{
+					Name:   "connect",
+					In:     "query",
+					Schema: base.CreateSchemaProxyRef("#/components/schemas/connect"),
+				},
+			)
+		}
 	} else {
 		op.RequestBody = &v3.RequestBody{
 			Content: util.MakeMediaTypes(

@@ -150,7 +150,9 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 
 	op.Responses = &v3.Responses{
 		Codes: codeMap,
-		Default: &v3.Response{
+	}
+	if !opts.TrimConnectRPC {
+		op.Responses.Default = &v3.Response{
 			Description: "Error",
 			Content: util.MakeMediaTypes(
 				opts,
@@ -158,7 +160,7 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 				false,
 				false,
 			),
-		},
+		}
 	}
 
 	switch method {
