@@ -183,11 +183,11 @@ func resolveField(md protoreflect.MessageDescriptor, param string) (protoreflect
 	current := md
 	var fd protoreflect.FieldDescriptor
 	for _, paramPart := range strings.Split(param, ".") {
-		slog.Info("resolveField", "paramPart", paramPart)
+		slog.Debug("resolveField", "paramPart", paramPart)
 		if field := fieldByName(current, paramPart); field == nil {
 			return nil, nil
 		} else {
-			slog.Info("resolveField", "field", field.FullName())
+			slog.Debug("resolveField", "field", field.FullName())
 			fd = field
 			jsonParts = append(jsonParts, fd.JSONName())
 			current = field.Message()
@@ -197,7 +197,7 @@ func resolveField(md protoreflect.MessageDescriptor, param string) (protoreflect
 }
 
 func fieldByName(md protoreflect.MessageDescriptor, name string) protoreflect.FieldDescriptor {
-	slog.Info("fieldByName", "name", md.FullName(), "name", name)
+	slog.Debug("fieldByName", "name", md.FullName(), "name", name)
 	fields := md.Fields()
 	if field := fields.ByName(protoreflect.Name(name)); field != nil {
 		return field
