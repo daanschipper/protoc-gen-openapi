@@ -249,30 +249,7 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 	})
 	op.Responses = &v3.Responses{
 		Codes: codeMap,
-		Default: &v3.Response{
-			Description: "Error",
-			Content: util.MakeMediaTypes(
-				opts,
-				base.CreateSchemaProxyRef("#/components/schemas/connect.error"),
-				false,
-				isStreaming,
-			),
-		},
 	}
-
-	op.Parameters = append(op.Parameters,
-		&v3.Parameter{
-			Name:     "Connect-Protocol-Version",
-			In:       "header",
-			Required: util.BoolPtr(true),
-			Schema:   base.CreateSchemaProxyRef("#/components/schemas/connect-protocol-version"),
-		},
-		&v3.Parameter{
-			Name:   "Connect-Timeout-Ms",
-			In:     "header",
-			Schema: base.CreateSchemaProxyRef("#/components/schemas/connect-timeout-header"),
-		},
-	)
 
 	// Request parameters
 	inputId := util.FormatTypeRef(string(method.Input().FullName()))
