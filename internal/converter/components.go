@@ -35,6 +35,10 @@ func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*hi
 	slog.Debug("collection complete", slog.String("file", string(fd.Name())), slog.Int("messages", len(st.Messages)), slog.Int("enum", len(st.Enums)))
 	components.Schemas = stateToSchema(st)
 
+	if opts.TrimConnectRPC == true {
+		return components, nil
+	}
+
 	hasGetRequests := false
 	hasMethods := false
 

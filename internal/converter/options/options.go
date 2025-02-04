@@ -41,6 +41,8 @@ type Options struct {
 	IgnoreGoogleapiHTTP bool
 	// Services filters which services will be used for generating OpenAPI spec.
 	Services []protoreflect.FullName
+	// Trim ConnectRPC
+	TrimConnectRPC bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -94,6 +96,8 @@ func FromString(s string) (Options, error) {
 			opts.WithProtoAnnotations = true
 		case param == "trim-unused-types":
 			opts.TrimUnusedTypes = true
+		case param == "trim-connect-rpc":
+			opts.TrimConnectRPC = true
 		case param == "fully-qualified-message-names":
 			opts.FullyQualifiedMessageNames = true
 		case param == "with-service-descriptions":
