@@ -265,27 +265,6 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 					true,
 					isStreaming),
 			},
-			&v3.Parameter{
-				Name:     "encoding",
-				In:       "query",
-				Required: util.BoolPtr(true),
-				Schema:   base.CreateSchemaProxyRef("#/components/schemas/encoding"),
-			},
-			&v3.Parameter{
-				Name:   "base64",
-				In:     "query",
-				Schema: base.CreateSchemaProxyRef("#/components/schemas/base64"),
-			},
-			&v3.Parameter{
-				Name:   "compression",
-				In:     "query",
-				Schema: base.CreateSchemaProxyRef("#/components/schemas/compression"),
-			},
-			&v3.Parameter{
-				Name:   "connect",
-				In:     "query",
-				Schema: base.CreateSchemaProxyRef("#/components/schemas/connect"),
-			},
 		)
 	} else {
 		op.RequestBody = &v3.RequestBody{
