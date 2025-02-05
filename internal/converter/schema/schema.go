@@ -2,8 +2,8 @@ package schema
 
 import (
 	"fmt"
-	"log/slog"
-	"slices"
+    "log/slog"
+    "slices"
 
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
@@ -26,6 +26,7 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 	if opts.FullyQualifiedMessageNames {
 		title = string(tt.FullName())
 	}
+	title = util.TrimMessageSuffix(opts, title)
 	s := &base.Schema{
 		Title:                title,
 		Description:          util.FormatComments(tt.ParentFile().SourceLocations().ByDescriptor(tt)),
@@ -72,7 +73,12 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 
 	// Apply Updates from Options
 	s = opts.MessageAnnotator.AnnotateMessage(opts, s, tt)
-	return string(tt.FullName()), s
+
+	return descriptorToId(opts, tt), s
+}
+
+func descriptorToId(opts options.Options, descriptor protoreflect.Descriptor) string {
+	return util.TrimMessageSuffix(opts, string(descriptor.FullName()))
 }
 
 func FieldToSchema(opts options.Options, parent *base.SchemaProxy, tt protoreflect.FieldDescriptor) *base.SchemaProxy {
@@ -173,10 +179,10 @@ func ReferenceFieldToSchema(opts options.Options, parent *base.SchemaProxy, tt p
 	switch tt.Kind() {
 	case protoreflect.MessageKind:
 		opts.FieldReferenceAnnotator.AnnotateFieldReference(opts, parent.Schema(), tt)
-		return base.CreateSchemaProxyRef("#/components/schemas/" + string(tt.Message().FullName()))
+		return base.CreateSchemaProxyRef("#/components/schemas/" + descriptorToId(opts, tt.Message()))
 	case protoreflect.EnumKind:
 		opts.FieldReferenceAnnotator.AnnotateFieldReference(opts, parent.Schema(), tt)
-		return base.CreateSchemaProxyRef("#/components/schemas/" + string(tt.Enum().FullName()))
+		return base.CreateSchemaProxyRef("#/components/schemas/" + descriptorToId(opts, tt.Enum()))
 	default:
 		panic(fmt.Errorf("ReferenceFieldToSchema called with unknown kind: %T", tt.Kind()))
 	}

@@ -79,8 +79,15 @@ func BoolPtr(b bool) *bool {
 	return &b
 }
 
-func FormatTypeRef(t string) string {
-	return strings.TrimPrefix(t, ".")
+func FormatTypeRef(opts options.Options, t string) string {
+	return TrimMessageSuffix(opts, strings.TrimPrefix(t, "."))
+}
+
+func TrimMessageSuffix(opts options.Options, messageName string) string {
+	if opts.TrimMessageSuffix == "" {
+		return messageName
+	}
+	return strings.TrimSuffix(messageName, opts.TrimMessageSuffix)
 }
 
 func IsMethodDeprecated(md protoreflect.MethodDescriptor) *bool {

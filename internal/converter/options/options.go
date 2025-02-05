@@ -47,6 +47,8 @@ type Options struct {
 	ExplicitOptionalFields bool
 	FilterPublic           bool
 	DirectProtoMessage     bool
+	// Strip suffix from message
+	TrimMessageSuffix string
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -81,6 +83,7 @@ func FromString(s string) (Options, error) {
 	for _, proto := range Protocols {
 		supportedProtocols[proto.Name] = struct{}{}
 	}
+	trimMessageSuffixParam := "trim-message-suffix="
 
 	contentTypes := map[string]struct{}{}
 	for _, param := range strings.Split(s, ",") {
@@ -114,6 +117,8 @@ func FromString(s string) (Options, error) {
 			opts.IgnoreGoogleapiHTTP = true
 		case param == "filter-public":
 			opts.FilterPublic = true
+		case strings.HasPrefix(param, trimMessageSuffixParam):
+			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
 		case strings.HasPrefix(param, "content-types="):
 			for _, contentType := range strings.Split(param[14:], ";") {
 				contentType = strings.TrimSpace(contentType)
