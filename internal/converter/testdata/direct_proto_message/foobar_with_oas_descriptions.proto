@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package foobar_with_oas_descriptions;
+
+import "gnostic/openapi/v3/annotations.proto";
+
+// Description for Foo
+service Foo {
+  rpc FooBar(BarRequest) returns (BarReply) {
+    option (gnostic.openapi.v3.operation) = {
+      description: "Description for FooBar"
+    };
+  }
+}
+
+// The request message containing the user's name.
+message BarRequest {
+  option (gnostic.openapi.v3.schema) = {
+    title: "Title for BarRequest"
+    description: "Description for BarRequest"
+  };
+
+  Name name = 1 [
+    (gnostic.openapi.v3.property) = {
+      title: "Title for BarRequest"
+      description: "Description for BarRequest.name"
+    }
+  ];
+}
+
+// The response message containing the greetings
+message BarReply {
+  option (gnostic.openapi.v3.schema) = {
+    title: "Title for BarRequest"
+    description: "Description for BarRequest";
+  };
+  string message = 1[
+    (gnostic.openapi.v3.property) = {
+      title: "Title for BarReply.message"
+      description: "Description for BarReply.message"
+    }
+  ];
+}
+
+message Name {
+  option (gnostic.openapi.v3.schema) = {
+    title: "Title for Name"
+    description: "Description for Name"
+  };
+  string name = 1[
+    (gnostic.openapi.v3.property) = {
+      title: "Title for Name.name"
+      description: "Description for Name.name";
+    }
+  ];
+}
