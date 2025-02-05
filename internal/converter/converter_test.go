@@ -30,6 +30,7 @@ var scenarios = []Scenario{
 	{Name: "proto_names", Options: "with-proto-names"},
 	{Name: "with_proto_annotations", Options: "with-proto-annotations"},
 	{Name: "trim_unused_type", Options: "trim-unused-types"},
+	{Name: "explicit_optional_fields", Options: "explicit-optional-fields,allow-get,with-streaming,with-service-descriptions,trim-connect-rpc"},
 	{Name: "with_base", Options: "base=testdata/with_base/base.yaml,trim-unused-types"},
 	{Name: "with_specification_extensions", Options: "base=testdata/with_specification_extensions/base.yaml,trim-unused-types"},
 }
