@@ -1,0 +1,83 @@
+openapi: 3.1.0
+info:
+  title: trim_message_suffix_foobar_enum
+paths:
+  /trim_message_suffix_foobar_enum.Foo/BarTrim:
+    post:
+      tags:
+        - trim_message_suffix_foobar_enum.Foo
+      summary: BarTrim
+      operationId: trim_message_suffix_foobar_enum.Foo.BarTrim
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/trim_message_suffix_foobar_enum.Message'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/trim_message_suffix_foobar_enum.Message'
+  /trim_message_suffix_foobar_enum.Foo/BarNotTrim:
+    post:
+      tags:
+        - trim_message_suffix_foobar_enum.Foo
+      summary: BarNotTrim
+      operationId: trim_message_suffix_foobar_enum.Foo.BarNotTrim
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/trim_message_suffix_foobar_enum.NameSuffixToNotTrim'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/trim_message_suffix_foobar_enum.NameSuffixToNotTrim'
+components:
+  schemas:
+    trim_message_suffix_foobar_enum.EnumMessageSuffixToNotTrim:
+      type: string
+      title: EnumMessageSuffixToNotTrim
+      enum:
+        - NOT_TRIM_VALUE_ONE
+        - NOT_TRIM_VALUE_TWO
+    trim_message_suffix_foobar_enum.EnumMessage:
+      type: string
+      title: EnumMessage
+      enum:
+        - TRIM_VALUE_ONE
+        - TRIM_VALUE_TWO
+    trim_message_suffix_foobar_enum.Message:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+        enumField:
+          allOf:
+            - $ref: '#/components/schemas/trim_message_suffix_foobar_enum.EnumMessage'
+          title: enum_field
+      title: Message
+      additionalProperties: false
+    trim_message_suffix_foobar_enum.NameSuffixToNotTrim:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+        enumField:
+          allOf:
+            - $ref: '#/components/schemas/trim_message_suffix_foobar_enum.EnumMessageSuffixToNotTrim'
+          title: enum_field
+      title: NameSuffixToNotTrim
+      additionalProperties: false
+security: []
+tags:
+  - name: trim_message_suffix_foobar_enum.Foo

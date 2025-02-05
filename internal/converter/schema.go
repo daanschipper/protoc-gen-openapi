@@ -159,13 +159,15 @@ func enumToSchema(state *State, tt protoreflect.EnumDescriptor) (string, *base.S
 	if state.Opts.FullyQualifiedMessageNames {
 		title = string(tt.FullName())
 	}
+	title = util.TrimMessageSuffix(state.Opts, title)
 	s := &base.Schema{
 		Title:       title,
 		Description: util.FormatComments(tt.ParentFile().SourceLocations().ByDescriptor(tt)),
 		Type:        []string{"string"},
 		Enum:        children,
 	}
-	return string(tt.FullName()), s
+
+	return util.DescriptorToId(state.Opts, tt), s
 }
 
 func stateToSchema(st *State) *orderedmap.Map[string, *base.SchemaProxy] {
