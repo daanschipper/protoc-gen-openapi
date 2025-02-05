@@ -109,7 +109,15 @@ func FieldToSchema(opts options.Options, parent *base.SchemaProxy, tt protorefle
 		return base.CreateSchemaProxy(s)
 	} else {
 		switch tt.Kind() {
-		case protoreflect.MessageKind, protoreflect.EnumKind:
+		case protoreflect.EnumKind:
+			msg := ScalarFieldToSchema(opts, parent, tt, false)
+			msg.AllOf = append(msg.AllOf, ReferenceFieldToSchema(opts, parent, tt))
+			return base.CreateSchemaProxy(msg)
+		case protoreflect.MessageKind:
+			if opts.DirectProtoMessage {
+				return ReferenceFieldToSchema(opts, parent, tt)
+			}
+
 			msg := ScalarFieldToSchema(opts, parent, tt, false)
 			msg.AllOf = append(msg.AllOf, ReferenceFieldToSchema(opts, parent, tt))
 			return base.CreateSchemaProxy(msg)

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package foobar;
+
+service Foo {
+  rpc FooBar(BarRequest) returns (BarReply) {}
+}
+
+// The request message containing the user's name.
+message BarRequest {
+  Name name = 1;
+}
+
+// The response message containing the greetings
+message BarReply {
+  string message = 1;
+}
+
+message Name {
+  string name = 1;
+}
