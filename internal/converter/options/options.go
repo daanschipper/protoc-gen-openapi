@@ -49,6 +49,8 @@ type Options struct {
 	DirectProtoMessage     bool
 	// Strip suffix from message
 	TrimMessageSuffix string
+	// Trim the enum name prefix from the enum value names.
+	TrimEnumNamePrefix bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -117,6 +119,8 @@ func FromString(s string) (Options, error) {
 			opts.IgnoreGoogleapiHTTP = true
 		case param == "filter-public":
 			opts.FilterPublic = true
+		case param == "trim-enum-name-prefix":
+			opts.TrimEnumNamePrefix = true
 		case strings.HasPrefix(param, trimMessageSuffixParam):
 			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
 		case strings.HasPrefix(param, "content-types="):

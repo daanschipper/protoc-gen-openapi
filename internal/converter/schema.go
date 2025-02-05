@@ -1,15 +1,16 @@
 package converter
 
 import (
-	"log/slog"
-	"sort"
-	"strconv"
-
+	"github.com/fatih/camelcase"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/pb33f/libopenapi/utils"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gopkg.in/yaml.v3"
+	"log/slog"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/schema"
@@ -141,7 +142,14 @@ func enumToSchema(state *State, tt protoreflect.EnumDescriptor) (string, *base.S
 	values := tt.Values()
 	for i := 0; i < values.Len(); i++ {
 		value := values.Get(i)
-		children = append(children, utils.CreateStringNode(string(value.Name())))
+
+		name := string(value.Name())
+		if state.Opts.TrimEnumNamePrefix {
+			prefix := strings.ToUpper(strings.Join(camelcase.Split(string(tt.Name())), "_")) + "_"
+			name = strings.TrimPrefix(name, prefix)
+		}
+
+		children = append(children, utils.CreateStringNode(name))
 		if state.Opts.IncludeNumberEnumValues {
 			children = append(children, utils.CreateIntNode(strconv.FormatInt(int64(value.Number()), 10)))
 		}
