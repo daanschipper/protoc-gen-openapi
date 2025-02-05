@@ -1,0 +1,40 @@
+// Example description
+syntax = "proto3";
+
+import "gnostic/openapi/v3/annotations.proto";
+
+package helloworld;
+
+option go_package = "google.golang.org/grpc/examples/helloworld/helloworld";
+option java_multiple_files = true;
+option java_outer_classname = "HelloWorldProto";
+option java_package = "io.grpc.examples.helloworld";
+
+// The greeting service definition.
+service OptionalGreeter {
+  // Sends a greeting
+  rpc SayHello(OptionalHelloRequest) returns (OptionalHelloReply) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // Writes a greeting (has side effects)
+  rpc WriteHello(OptionalHelloRequest) returns (OptionalHelloReply) {}
+}
+
+// The request message containing the user's name.
+message OptionalHelloRequest {
+  option (gnostic.openapi.v3.schema) = {
+    required: ["name"];
+  };
+  string name = 1;
+  optional string description = 2;
+}
+
+// The response message containing the greetings
+message OptionalHelloReply {
+  option (gnostic.openapi.v3.schema) = {
+    required: ["name"];
+  };
+  string message = 1;
+  optional string description = 2;
+}

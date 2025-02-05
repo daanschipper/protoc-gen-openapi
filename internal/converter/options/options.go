@@ -45,6 +45,8 @@ type Options struct {
 	Services []protoreflect.FullName
 	// Trim ConnectRPC
 	TrimConnectRPC bool
+	// No oneOf for optional fields
+	ExplicitOptionalFields bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -100,6 +102,8 @@ func FromString(s string) (Options, error) {
 			opts.TrimUnusedTypes = true
 		case param == "trim-connect-rpc":
 			opts.TrimConnectRPC = true
+		case param == "explicit-optional-fields":
+			opts.ExplicitOptionalFields = true
 		case param == "fully-qualified-message-names":
 			opts.FullyQualifiedMessageNames = true
 		case param == "with-service-descriptions":
