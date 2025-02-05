@@ -113,7 +113,7 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 			}
 		} else {
 			inputName := string(md.Input().FullName())
-			s := base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(inputName))
+			s := base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(opts, inputName))
 			op.RequestBody = util.MethodToRequestBody(opts, md, s, false)
 		}
 
@@ -135,7 +135,7 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 	mediaType := orderedmap.New[string, *v3.MediaType]()
 	var outputSchema *base.SchemaProxy
 	if rule.ResponseBody == "" {
-		outputSchema = base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(string(md.Output().FullName())))
+		outputSchema = base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(opts, string(md.Output().FullName())))
 	} else {
 		if fd, _ := resolveField(md.Output(), rule.ResponseBody); fd != nil {
 			outputSchema = schema.FieldToSchema(opts, nil, fd)

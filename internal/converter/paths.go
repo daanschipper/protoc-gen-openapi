@@ -258,7 +258,7 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 
 	// Responses
 	codeMap := orderedmap.New[string, *v3.Response]()
-	outputId := util.FormatTypeRef(string(method.Output().FullName()))
+	outputId := util.FormatTypeRef(opts, string(method.Output().FullName()))
 	codeMap.Set("200", &v3.Response{
 		Description: "Success",
 		Content: util.MakeMediaTypes(
@@ -299,7 +299,7 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 	}
 
 	// Request parameters
-	inputId := util.FormatTypeRef(string(method.Input().FullName()))
+	inputId := util.FormatTypeRef(opts, string(method.Input().FullName()))
 	if returnGet {
 		op.OperationId = op.OperationId + ".get"
 		op.Parameters = append(op.Parameters,
@@ -308,7 +308,7 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 				In:   "query",
 				Content: util.MakeMediaTypes(
 					opts,
-					base.CreateSchemaProxyRef("#/components/schemas/"+util.FormatTypeRef(inputId)),
+					base.CreateSchemaProxyRef("#/components/schemas/"+util.FormatTypeRef(opts, inputId)),
 					true,
 					isStreaming),
 			},
