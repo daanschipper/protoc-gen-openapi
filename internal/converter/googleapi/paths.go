@@ -205,7 +205,7 @@ func resolveField(md protoreflect.MessageDescriptor, param string) (protoreflect
 }
 
 func fieldByName(md protoreflect.MessageDescriptor, name string) protoreflect.FieldDescriptor {
-	slog.Info("fieldByName", "name", md.FullName(), "name", name)
+	slog.Debug("fieldByName", "name", md.FullName(), "name", name)
 	fields := md.Fields()
 	if field := fields.ByName(protoreflect.Name(name)); field != nil {
 		return field
