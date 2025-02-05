@@ -1,0 +1,54 @@
+openapi: 3.1.0
+info:
+  title: foobar
+  description: '## foobar.Foo'
+paths:
+  /foobar.Foo/FooBar:
+    post:
+      tags:
+        - foobar.Foo
+      summary: FooBar
+      operationId: foobar.Foo.FooBar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/foobar.BarRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/foobar.BarReply'
+components:
+  schemas:
+    foobar.BarReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+      title: BarReply
+      additionalProperties: false
+      description: The response message containing the greetings
+    foobar.BarRequest:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/foobar.Name'
+      title: BarRequest
+      additionalProperties: false
+      description: The request message containing the user's name.
+    foobar.Name:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+      title: Name
+      additionalProperties: false
+security: []
+tags:
+  - name: foobar.Foo

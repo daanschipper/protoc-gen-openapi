@@ -1,0 +1,89 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "foobar_with_oas_descriptions",
+    "description": "## foobar_with_oas_descriptions.Foo\n\nDescription for Foo"
+  },
+  "paths": {
+    "/foobar_with_oas_descriptions.Foo/FooBar": {
+      "post": {
+        "tags": [
+          "foobar_with_oas_descriptions.Foo"
+        ],
+        "summary": "FooBar",
+        "description": "Description for FooBar",
+        "operationId": "foobar_with_oas_descriptions.Foo.FooBar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/foobar_with_oas_descriptions.BarRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/foobar_with_oas_descriptions.BarReply"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "foobar_with_oas_descriptions.BarReply": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Title for BarReply.message",
+            "description": "Description for BarReply.message"
+          }
+        },
+        "title": "Title for BarRequest",
+        "additionalProperties": false,
+        "description": "Description for BarRequest"
+      },
+      "foobar_with_oas_descriptions.BarRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/foobar_with_oas_descriptions.Name"
+          }
+        },
+        "title": "Title for BarRequest",
+        "additionalProperties": false,
+        "description": "Description for BarRequest"
+      },
+      "foobar_with_oas_descriptions.Name": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Title for Name.name",
+            "description": "Description for Name.name"
+          }
+        },
+        "title": "Title for Name",
+        "additionalProperties": false,
+        "description": "Description for Name"
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "foobar_with_oas_descriptions.Foo",
+      "description": "Description for Foo"
+    }
+  ]
+}

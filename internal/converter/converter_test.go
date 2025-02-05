@@ -27,6 +27,7 @@ import (
 
 var scenarios = []Scenario{
 	{Name: "standard", Options: "allow-get,with-streaming,with-service-descriptions"},
+	{Name: "direct_proto_message", Options: "allow-get,with-streaming,with-service-descriptions,trim-connect-rpc,direct-proto-message"},
 	{Name: "proto_names", Options: "with-proto-names"},
 	{Name: "with_proto_annotations", Options: "with-proto-annotations"},
 	{Name: "trim_unused_type", Options: "trim-unused-types"},

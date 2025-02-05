@@ -46,6 +46,7 @@ type Options struct {
 	// No oneOf for optional fields
 	ExplicitOptionalFields bool
 	FilterPublic           bool
+	DirectProtoMessage     bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -107,6 +108,8 @@ func FromString(s string) (Options, error) {
 			opts.FullyQualifiedMessageNames = true
 		case param == "with-service-descriptions":
 			opts.WithServiceDescriptions = true
+		case param == "direct-proto-message":
+			opts.DirectProtoMessage = true
 		case param == "ignore-googleapi-http":
 			opts.IgnoreGoogleapiHTTP = true
 		case param == "filter-public":
