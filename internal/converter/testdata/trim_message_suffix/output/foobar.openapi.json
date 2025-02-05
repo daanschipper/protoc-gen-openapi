@@ -1,0 +1,102 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "trim_message_suffix_foobar"
+  },
+  "paths": {
+    "/trim_message_suffix_foobar.Foo/BarTrim": {
+      "post": {
+        "tags": [
+          "trim_message_suffix_foobar.Foo"
+        ],
+        "summary": "BarTrim",
+        "operationId": "trim_message_suffix_foobar.Foo.BarTrim",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/trim_message_suffix_foobar.Message"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/trim_message_suffix_foobar.Message"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trim_message_suffix_foobar.Foo/BarNotTrim": {
+      "post": {
+        "tags": [
+          "trim_message_suffix_foobar.Foo"
+        ],
+        "summary": "BarNotTrim",
+        "operationId": "trim_message_suffix_foobar.Foo.BarNotTrim",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/trim_message_suffix_foobar.NameSuffixToNotTrim"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/trim_message_suffix_foobar.NameSuffixToNotTrim"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "trim_message_suffix_foobar.Message": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "name"
+          }
+        },
+        "title": "Message",
+        "additionalProperties": false
+      },
+      "trim_message_suffix_foobar.NameSuffixToNotTrim": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "name"
+          }
+        },
+        "title": "NameSuffixToNotTrim",
+        "additionalProperties": false
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "trim_message_suffix_foobar.Foo"
+    }
+  ]
+}
