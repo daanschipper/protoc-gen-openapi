@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package trim_enum_name_prefix;
+
+service Foo {
+  rpc Bar(Request) returns (GatewayResponseProto) {}
+}
+
+message Request {
+  string description = 1;
+}
+
+message GatewayResponseProto {
+  string response_code = 1;
+  string response_code_description = 2;
+  GatewayResponseCodeProto gateway_response_code = 3;
+}
+
+enum GatewayResponseCodeProto {
+  GATEWAY_RESPONSE_CODE_PROTO_UNSPECIFIED = 0;
+  GATEWAY_RESPONSE_CODE_PROTO_APPROVED = 1;
+  GATEWAY_RESPONSE_CODE_PROTO_REFUSED = 2;
+}
