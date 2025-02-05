@@ -74,11 +74,7 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 	// Apply Updates from Options
 	s = opts.MessageAnnotator.AnnotateMessage(opts, s, tt)
 
-	return descriptorToId(opts, tt), s
-}
-
-func descriptorToId(opts options.Options, descriptor protoreflect.Descriptor) string {
-	return util.TrimMessageSuffix(opts, string(descriptor.FullName()))
+	return util.DescriptorToId(opts, tt), s
 }
 
 func FieldToSchema(opts options.Options, parent *base.SchemaProxy, tt protoreflect.FieldDescriptor) *base.SchemaProxy {
@@ -179,10 +175,10 @@ func ReferenceFieldToSchema(opts options.Options, parent *base.SchemaProxy, tt p
 	switch tt.Kind() {
 	case protoreflect.MessageKind:
 		opts.FieldReferenceAnnotator.AnnotateFieldReference(opts, parent.Schema(), tt)
-		return base.CreateSchemaProxyRef("#/components/schemas/" + descriptorToId(opts, tt.Message()))
+		return base.CreateSchemaProxyRef("#/components/schemas/" + util.DescriptorToId(opts, tt.Message()))
 	case protoreflect.EnumKind:
 		opts.FieldReferenceAnnotator.AnnotateFieldReference(opts, parent.Schema(), tt)
-		return base.CreateSchemaProxyRef("#/components/schemas/" + descriptorToId(opts, tt.Enum()))
+		return base.CreateSchemaProxyRef("#/components/schemas/" + util.DescriptorToId(opts, tt.Enum()))
 	default:
 		panic(fmt.Errorf("ReferenceFieldToSchema called with unknown kind: %T", tt.Kind()))
 	}

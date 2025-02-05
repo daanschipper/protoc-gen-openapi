@@ -83,6 +83,10 @@ func FormatTypeRef(opts options.Options, t string) string {
 	return TrimMessageSuffix(opts, strings.TrimPrefix(t, "."))
 }
 
+func DescriptorToId(opts options.Options, descriptor protoreflect.Descriptor) string {
+	return TrimMessageSuffix(opts, string(descriptor.FullName()))
+}
+
 func TrimMessageSuffix(opts options.Options, messageName string) string {
 	if opts.TrimMessageSuffix == "" {
 		return messageName
