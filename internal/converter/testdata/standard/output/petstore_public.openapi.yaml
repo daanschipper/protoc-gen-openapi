@@ -1,0 +1,398 @@
+openapi: 3.1.0
+info:
+  title: io.swagger.petstore.v2_public
+  description: '## io.swagger.petstore.v2_public.PetService'
+paths:
+  /pet/{pet_id}:
+    get:
+      tags:
+        - io.swagger.petstore.v2_public.PetService
+      summary: GetPetByID
+      operationId: io.swagger.petstore.v2_public.PetService.GetPetByID
+      parameters:
+        - name: pet_id
+          in: path
+          required: true
+          schema:
+            type:
+              - integer
+              - string
+            title: pet_id
+            format: int64
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/io.swagger.petstore.v2_public.Pet'
+    post:
+      tags:
+        - io.swagger.petstore.v2_public.PetService
+      summary: UpdatePetWithForm
+      operationId: io.swagger.petstore.v2_public.PetService.UpdatePetWithForm
+      parameters:
+        - name: pet_id
+          in: path
+          required: true
+          schema:
+            type:
+              - integer
+              - string
+            title: pet_id
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  title: name
+                status:
+                  type: string
+                  title: status
+              title: UpdatePetWithFormReq
+              additionalProperties: false
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google.protobuf.Empty'
+    delete:
+      tags:
+        - io.swagger.petstore.v2_public.PetService
+      summary: DeletePet
+      operationId: io.swagger.petstore.v2_public.PetService.DeletePet
+      parameters:
+        - name: pet_id
+          in: path
+          required: true
+          schema:
+            type:
+              - integer
+              - string
+            title: pet_id
+            format: int64
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google.protobuf.Empty'
+  /pet/{pet_id}/uploadImage:
+    post:
+      tags:
+        - io.swagger.petstore.v2_public.PetService
+      summary: UploadFile
+      operationId: io.swagger.petstore.v2_public.PetService.UploadFile
+      parameters:
+        - name: pet_id
+          in: path
+          required: true
+          schema:
+            type:
+              - integer
+              - string
+            title: pet_id
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                additionalMetadata:
+                  type: string
+                  title: additional_metadata
+                file:
+                  type: string
+                  title: file
+              title: UploadFileReq
+              additionalProperties: false
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/io.swagger.petstore.v2_public.ApiResponse'
+  /pet:
+    put:
+      tags:
+        - io.swagger.petstore.v2_public.PetService
+      summary: UpdatePet
+      operationId: io.swagger.petstore.v2_public.PetService.UpdatePet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/io.swagger.petstore.v2_public.Pet'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/io.swagger.petstore.v2_public.Pet'
+    post:
+      tags:
+        - io.swagger.petstore.v2_public.PetService
+      summary: AddPet
+      operationId: io.swagger.petstore.v2_public.PetService.AddPet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/io.swagger.petstore.v2_public.Pet'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/io.swagger.petstore.v2_public.Pet'
+  /pet/findByTags:
+    get:
+      tags:
+        - io.swagger.petstore.v2_public.PetService
+      summary: FindPetsByTag
+      operationId: io.swagger.petstore.v2_public.PetService.FindPetsByTag
+      parameters:
+        - name: tag
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            title: tag
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/io.swagger.petstore.v2_public.Pet'
+                title: pets
+  /pet/findByStatus:
+    get:
+      tags:
+        - io.swagger.petstore.v2_public.PetService
+      summary: FindPetsByStatus
+      operationId: io.swagger.petstore.v2_public.PetService.FindPetsByStatus
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            title: status
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/io.swagger.petstore.v2_public.Pet'
+                title: pets
+components:
+  schemas:
+    io.swagger.petstore.v2_public.Status:
+      type: string
+      title: Status
+      enum:
+        - unknown
+        - available
+        - pending
+        - sold
+      description: |-
+        These do not use standard naming practices in order to match
+         the JSON format of the Pet Store Open API schema, which uses
+         lower-case names for these constants.
+    google.protobuf.Empty:
+      type: object
+      description: |-
+        A generic empty message that you can re-use to avoid defining duplicated
+         empty messages in your APIs. A typical example is to use it as the request
+         or the response type of an API method. For instance:
+
+             service Foo {
+               rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);
+             }
+    io.swagger.petstore.v2_public.ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          title: code
+          format: int32
+        type:
+          type: string
+          title: type
+        message:
+          type: string
+          title: message
+      title: ApiResponse
+      additionalProperties: false
+    io.swagger.petstore.v2_public.Category:
+      type: object
+      properties:
+        id:
+          type:
+            - integer
+            - string
+          title: id
+          format: int64
+        name:
+          type: string
+          title: name
+      title: Category
+      additionalProperties: false
+    io.swagger.petstore.v2_public.Pet:
+      type: object
+      properties:
+        id:
+          type:
+            - integer
+            - string
+          title: id
+          format: int64
+        category:
+          $ref: '#/components/schemas/io.swagger.petstore.v2_public.Category'
+        name:
+          type: string
+          title: name
+        photoUrls:
+          type: array
+          items:
+            type: string
+          title: photo_urls
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/io.swagger.petstore.v2_public.Tag'
+          title: tags
+        status:
+          type: string
+          title: status
+      title: Pet
+      additionalProperties: false
+    io.swagger.petstore.v2_public.PetBody:
+      type: object
+      properties:
+        petId:
+          type:
+            - integer
+            - string
+          title: pet_id
+          format: int64
+        body:
+          type: string
+          title: body
+      title: PetBody
+      additionalProperties: false
+    io.swagger.petstore.v2_public.PetID:
+      type: object
+      properties:
+        petId:
+          type:
+            - integer
+            - string
+          title: pet_id
+          format: int64
+      title: PetID
+      additionalProperties: false
+    io.swagger.petstore.v2_public.Pets:
+      type: object
+      properties:
+        pets:
+          type: array
+          items:
+            $ref: '#/components/schemas/io.swagger.petstore.v2_public.Pet'
+          title: pets
+      title: Pets
+      additionalProperties: false
+    io.swagger.petstore.v2_public.StatusReq:
+      type: object
+      properties:
+        status:
+          type: array
+          items:
+            type: string
+          title: status
+      title: StatusReq
+      additionalProperties: false
+    io.swagger.petstore.v2_public.Tag:
+      type: object
+      properties:
+        id:
+          type:
+            - integer
+            - string
+          title: id
+          format: int64
+        name:
+          type: string
+          title: name
+      title: Tag
+      additionalProperties: false
+    io.swagger.petstore.v2_public.TagReq:
+      type: object
+      properties:
+        tag:
+          type: array
+          items:
+            type: string
+          title: tag
+      title: TagReq
+      additionalProperties: false
+    io.swagger.petstore.v2_public.UpdatePetWithFormReq:
+      type: object
+      properties:
+        petId:
+          type:
+            - integer
+            - string
+          title: pet_id
+          format: int64
+        name:
+          type: string
+          title: name
+        status:
+          type: string
+          title: status
+      title: UpdatePetWithFormReq
+      additionalProperties: false
+    io.swagger.petstore.v2_public.UploadFileReq:
+      type: object
+      properties:
+        petId:
+          type:
+            - integer
+            - string
+          title: pet_id
+          format: int64
+        additionalMetadata:
+          type: string
+          title: additional_metadata
+        file:
+          type: string
+          title: file
+      title: UploadFileReq
+      additionalProperties: false
+security: []
+tags:
+  - name: io.swagger.petstore.v2_public.PetService
