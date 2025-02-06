@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: trim_message_suffix_foobar_enum_nested
+paths:
+  /trim_message_suffix_foobar_enum_nested.Foo/BarTrim:
+    post:
+      tags:
+        - trim_message_suffix_foobar_enum_nested.Foo
+      summary: BarTrim
+      operationId: trim_message_suffix_foobar_enum_nested.Foo.BarTrim
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/trim_message_suffix_foobar_enum_nested.Message'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/trim_message_suffix_foobar_enum_nested.Message'
+  /trim_message_suffix_foobar_enum_nested.Foo/BarNotTrim:
+    post:
+      tags:
+        - trim_message_suffix_foobar_enum_nested.Foo
+      summary: BarNotTrim
+      operationId: trim_message_suffix_foobar_enum_nested.Foo.BarNotTrim
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/trim_message_suffix_foobar_enum_nested.NameSuffixToNotTrim'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/trim_message_suffix_foobar_enum_nested.NameSuffixToNotTrim'
+components:
+  schemas:
+    trim_message_suffix_foobar_enum_nested.Message.EnumMessage:
+      type: string
+      title: EnumMessage
+      enum:
+        - TRIM_VALUE_ONE
+        - TRIM_VALUE_TWO
+    trim_message_suffix_foobar_enum_nested.NameSuffixToNotTrim.EnumMessageSuffixToNotTrim:
+      type: string
+      title: EnumMessageSuffixToNotTrim
+      enum:
+        - NOT_TRIM_VALUE_ONE
+        - NOT_TRIM_VALUE_TWO
+    trim_message_suffix_foobar_enum_nested.Message:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+      title: Message
+      additionalProperties: false
+    trim_message_suffix_foobar_enum_nested.NameSuffixToNotTrim:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+      title: NameSuffixToNotTrim
+      additionalProperties: false
+security: []
+tags:
+  - name: trim_message_suffix_foobar_enum_nested.Foo
