@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"path"
 	"strings"
 
@@ -85,7 +86,14 @@ func FormatTypeRef(opts options.Options, t string) string {
 }
 
 func DescriptorToId(opts options.Options, descriptor protoreflect.Descriptor) string {
-	return TrimMessageSuffix(opts, string(descriptor.FullName()))
+	// If in root of document then strip the prefix of the descriptor.
+	if descriptor.Parent().Name() == "" {
+		return TrimMessageSuffix(opts, string(descriptor.FullName()))
+	}
+
+	// Else strip prefix also from parent name.
+	// Only one level of nesting is supported.
+	return fmt.Sprintf("%s.%s", TrimMessageSuffix(opts, string(descriptor.Parent().FullName())), TrimMessageSuffix(opts, string(descriptor.Name())))
 }
 
 func TrimMessageSuffix(opts options.Options, messageName string) string {
