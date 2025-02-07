@@ -19,7 +19,7 @@ func SpecWithFileAnnotations(spec *highv3.Document, fd protoreflect.FileDescript
 		return
 	}
 	if opts.Openapi != "" {
-		spec.Info.Version = opts.Openapi
+		spec.Version = opts.Openapi
 	}
 
 	if opts.Info != nil {
@@ -40,7 +40,9 @@ func SpecWithFileAnnotations(spec *highv3.Document, fd protoreflect.FileDescript
 				URL:  opts.Info.License.Url,
 			}
 		}
-		spec.Info.Version = opts.Info.Version
+		if opts.Info.Version != "" {
+			spec.Info.Version = opts.Info.Version
+		}
 	}
 	spec.Servers = append(spec.Servers, toServers(opts.Servers)...)
 	spec.Security = append(spec.Security, toSecurityRequirements(opts.Security)...)
