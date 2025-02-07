@@ -53,6 +53,8 @@ type Options struct {
 	TrimMessageSuffix string
 	// Trim the enum name prefix from the enum value names.
 	TrimEnumNamePrefix bool
+	// Version
+	Version string
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -88,6 +90,7 @@ func FromString(s string) (Options, error) {
 		supportedProtocols[proto.Name] = struct{}{}
 	}
 	trimMessageSuffixParam := "trim-message-suffix="
+	versionParam := "version="
 
 	contentTypes := map[string]struct{}{}
 	for _, param := range strings.Split(s, ",") {
@@ -125,6 +128,8 @@ func FromString(s string) (Options, error) {
 			opts.TrimEnumNamePrefix = true
 		case strings.HasPrefix(param, trimMessageSuffixParam):
 			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
+		case strings.HasPrefix(param, versionParam):
+			opts.Version = param[len(versionParam):]
 		case strings.HasPrefix(param, "content-types="):
 			for _, contentType := range strings.Split(param[14:], ";") {
 				contentType = strings.TrimSpace(contentType)

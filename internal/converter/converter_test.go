@@ -38,6 +38,7 @@ var scenarios = []Scenario{
 	{Name: "filter_public", Options: "explicit-optional-fields,allow-get,with-streaming,with-service-descriptions,trim-connect-rpc,filter-public"},
 	{Name: "with_base", Options: "base=testdata/with_base/base.yaml,trim-unused-types"},
 	{Name: "with_specification_extensions", Options: "base=testdata/with_specification_extensions/base.yaml,trim-unused-types"},
+	{Name: "with_version", Options: "allow-get,with-streaming,with-service-descriptions,version=1.1.1"},
 }
 
 type Scenario struct {

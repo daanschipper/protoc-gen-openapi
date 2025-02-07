@@ -115,6 +115,11 @@ func ConvertWithOptions(req *pluginpb.CodeGeneratorRequest, opts options.Options
 	if err != nil {
 		return nil, err
 	}
+
+	if opts.Version != "" {
+		spec.Info.Version = opts.Version
+	}
+
 	outFiles := map[string]*v3.Document{}
 
 	for _, fileDesc := range req.GetProtoFile() {
@@ -138,6 +143,9 @@ func ConvertWithOptions(req *pluginpb.CodeGeneratorRequest, opts options.Options
 			}
 			spec.Info.Title = string(fd.FullName())
 			spec.Info.Description = util.FormatComments(fd.SourceLocations().ByDescriptor(fd))
+			if opts.Version != "" {
+				spec.Info.Version = opts.Version
+			}
 		}
 
 		if err := appendToSpec(opts, spec, fd); err != nil {

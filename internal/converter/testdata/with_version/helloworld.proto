@@ -1,0 +1,34 @@
+// Example description
+syntax = "proto3";
+
+package helloworld_with_version;
+
+import "gnostic/openapi/v3/annotations.proto";
+
+option (gnostic.openapi.v3.document) = {
+  info: {
+    title: "Hello";
+    description: "World!"
+  };
+};
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello(HelloRequest) returns (HelloReply) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // Writes a greeting (has side effects)
+  rpc WriteHello(HelloRequest) returns (HelloReply) {}
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
