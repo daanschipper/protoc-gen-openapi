@@ -5,6 +5,7 @@ import (
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/pb33f/libopenapi/utils"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gopkg.in/yaml.v3"
 	"log/slog"
@@ -15,6 +16,7 @@ import (
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/schema"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
+	oasExtension "github.com/sudorandom/protoc-gen-connect-openapi/openapi"
 )
 
 type State struct {
@@ -57,6 +59,24 @@ func (st *State) CollectFile(tt protoreflect.FileDescriptor) {
 		methods := service.Methods()
 		for j := 0; j < methods.Len(); j++ {
 			method := methods.Get(j)
+
+			// Do not collect messages of non-public methods if TrimUnusedTypes and FilterPublic are on.
+			if st.Opts.TrimUnusedTypes && st.Opts.FilterPublic {
+				openApiOptionsExtension := proto.GetExtension(method.Options(), oasExtension.E_MethodParams)
+				if openApiOptionsExtension == nil {
+					continue
+				}
+
+				if openApiOptionsExtension == oasExtension.E_MethodParams.InterfaceOf(oasExtension.E_MethodParams.Zero()) {
+					continue
+				}
+
+				openApiOptions := openApiOptionsExtension.(*oasExtension.OpenApiOptions)
+				if !openApiOptions.GetPublic() {
+					continue
+				}
+			}
+
 			st.CollectMessage(method.Input())
 			st.CollectMessage(method.Output())
 		}
