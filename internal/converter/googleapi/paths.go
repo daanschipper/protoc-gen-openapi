@@ -1,6 +1,7 @@
 package googleapi
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -70,11 +71,21 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 	pathItem := &v3.PathItem{}
 
 	fd := md.ParentFile()
+
 	service := md.Parent().(protoreflect.ServiceDescriptor)
+	serviceName := string(service.FullName())
+	if opts.WithoutFqn {
+		serviceName = string(service.Name())
+	}
+	operationId := string(md.FullName())
+	if opts.WithoutFqn {
+		operationId = fmt.Sprintf("%s.%s", service.Name(), md.Name())
+	}
+
 	op := &v3.Operation{
 		Summary:     string(md.Name()),
-		OperationId: string(md.FullName()),
-		Tags:        []string{string(service.FullName())},
+		OperationId: operationId,
+		Tags:        []string{serviceName},
 		Description: util.FormatComments(fd.SourceLocations().ByDescriptor(md)),
 	}
 
@@ -112,8 +123,8 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 				op.RequestBody = util.MethodToRequestBody(opts, md, base.CreateSchemaProxy(s), false)
 			}
 		} else {
-			inputName := string(md.Input().FullName())
-			s := base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(opts, inputName))
+			inputId := util.FormatTypeRef(opts, util.DescriptorToId(opts, md.Input()))
+			s := base.CreateSchemaProxyRef("#/components/schemas/" + inputId)
 			op.RequestBody = util.MethodToRequestBody(opts, md, s, false)
 		}
 
@@ -135,7 +146,8 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 	mediaType := orderedmap.New[string, *v3.MediaType]()
 	var outputSchema *base.SchemaProxy
 	if rule.ResponseBody == "" {
-		outputSchema = base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(opts, string(md.Output().FullName())))
+		outputId := util.FormatTypeRef(opts, util.DescriptorToId(opts, md.Output()))
+		outputSchema = base.CreateSchemaProxyRef("#/components/schemas/" + outputId)
 	} else {
 		if fd, _ := resolveField(md.Output(), rule.ResponseBody); fd != nil {
 			outputSchema = schema.FieldToSchema(opts, nil, fd)

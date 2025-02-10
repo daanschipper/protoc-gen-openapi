@@ -39,6 +39,7 @@ var scenarios = []Scenario{
 	{Name: "with_base", Options: "base=testdata/with_base/base.yaml,trim-unused-types"},
 	{Name: "with_specification_extensions", Options: "base=testdata/with_specification_extensions/base.yaml,trim-unused-types"},
 	{Name: "with_version", Options: "allow-get,with-streaming,with-service-descriptions,version=1.1.1"},
+	{Name: "without_fqn", Options: "trim-connect-rpc,without-fqn"},
 }
 
 type Scenario struct {
@@ -263,5 +264,57 @@ paths:
 
 		// Check that the generated content is merged with the base file
 		assert.Contains(t, content, "TestMessage")
+	})
+}
+
+func TestConvertWithOptionsNoFqn(t *testing.T) {
+	t.Run("with clashing message name", func(t *testing.T) {
+		opts := options.Options{
+			Path:           "test.openapi.yaml",
+			Format:         "yaml",
+			WithoutFqn:     true,
+			TrimConnectRPC: true,
+		}
+
+		req := &pluginpb.CodeGeneratorRequest{
+			ProtoFile: []*descriptorpb.FileDescriptorProto{
+				{
+					Name:    proto.String("a.proto"),
+					Package: proto.String("a"),
+					MessageType: []*descriptorpb.DescriptorProto{
+						{Name: proto.String("TestMessage")},
+					},
+				},
+				{
+					Name:    proto.String("b.proto"),
+					Package: proto.String("b"),
+					MessageType: []*descriptorpb.DescriptorProto{
+						{Name: proto.String("TestMessage")},
+					},
+				},
+				{
+					Name:    proto.String("test.proto"),
+					Package: proto.String("test"),
+
+					Dependency: []string{"a.proto", "b.proto"},
+					Service: []*descriptorpb.ServiceDescriptorProto{
+						{
+							Name: proto.String("ExampleApiService"),
+							Method: []*descriptorpb.MethodDescriptorProto{
+								{
+									Name:       proto.String("ExampleApiPath"),
+									InputType:  proto.String(".a.TestMessage"),
+									OutputType: proto.String(".b.TestMessage"),
+								},
+							},
+						},
+					},
+				},
+			},
+			FileToGenerate: []string{"a", "b", "test.proto"},
+		}
+
+		_, err := converter.ConvertWithOptions(req, opts)
+		require.Error(t, err)
 	})
 }

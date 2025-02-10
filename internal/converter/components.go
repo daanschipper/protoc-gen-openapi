@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/pb33f/libopenapi/datamodel/high/base"
@@ -34,6 +35,17 @@ func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*hi
 	st.CollectFile(fd)
 	slog.Debug("collection complete", slog.String("file", string(fd.Name())), slog.Int("messages", len(st.Messages)), slog.Int("enum", len(st.Enums)))
 	components.Schemas = stateToSchema(st)
+
+	if opts.WithoutFqn {
+		foo := make(map[string]string)
+		for message := range st.Messages {
+			messageWithoutFqn := util.TrimFqn(opts, message)
+			if clash, ok := foo[messageWithoutFqn]; ok {
+				return nil, fmt.Errorf("message with identical name, '%s' and '%s, last occurence will be used, results in incorrect openapi spec", clash, string(message.FullName()))
+			}
+			foo[messageWithoutFqn] = string(message.FullName())
+		}
+	}
 
 	if opts.TrimConnectRPC == true {
 		return components, nil

@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"log"
 	"path"
 	"strings"
 
@@ -86,14 +87,24 @@ func FormatTypeRef(opts options.Options, t string) string {
 }
 
 func DescriptorToId(opts options.Options, descriptor protoreflect.Descriptor) string {
-	// If in root of document then strip the prefix of the descriptor.
-	if descriptor.Parent().Name() == "" {
-		return TrimMessageSuffix(opts, string(descriptor.FullName()))
+	switch descriptor.(type) {
+	case protoreflect.MessageDescriptor:
+		return TrimFqn(opts, descriptor)
+	case protoreflect.EnumDescriptor:
+		return fmt.Sprintf("%s.%s", TrimMessageSuffix(opts, TrimFqn(opts, descriptor.Parent())), TrimMessageSuffix(opts, string(descriptor.Name())))
 	}
 
-	// Else strip prefix also from parent name.
-	// Only one level of nesting is supported.
-	return fmt.Sprintf("%s.%s", TrimMessageSuffix(opts, string(descriptor.Parent().FullName())), TrimMessageSuffix(opts, string(descriptor.Name())))
+	log.Fatalf("Unsupported descriptor type: %T", descriptor)
+	return ""
+}
+
+func TrimFqn(opts options.Options, descriptor protoreflect.Descriptor) string {
+	descriptorName := string(descriptor.FullName())
+	if opts.WithoutFqn {
+		descriptorName = string(descriptor.Name())
+	}
+
+	return TrimMessageSuffix(opts, descriptorName)
 }
 
 func TrimMessageSuffix(opts options.Options, messageName string) string {

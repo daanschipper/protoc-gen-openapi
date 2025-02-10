@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"fmt"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
@@ -63,7 +64,12 @@ func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, 
 
 			// Default to ConnectRPC/gRPC path if no google.api annotations
 			if pathItems == nil || pathItems.Len() == 0 {
-				path := "/" + string(service.FullName()) + "/" + string(method.Name())
+				serviceName := string(service.FullName())
+				if opts.WithoutFqn {
+					serviceName = string(service.Name())
+				}
+
+				path := "/" + serviceName + "/" + string(method.Name())
 				addPathItem(path, methodToPathItem(opts, method))
 			}
 		}
@@ -243,11 +249,22 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 	fd := method.ParentFile()
 	service := method.Parent().(protoreflect.ServiceDescriptor)
 	loc := fd.SourceLocations().ByDescriptor(method)
+
+	operationId := string(method.FullName())
+	if opts.WithoutFqn {
+		operationId = fmt.Sprintf("%s.%s", service.Name(), method.Name())
+	}
+
+	tag := string(service.FullName())
+	if opts.WithoutFqn {
+		tag = string(service.Name())
+	}
+
 	op := &v3.Operation{
 		Summary:     string(method.Name()),
-		OperationId: string(method.FullName()),
+		OperationId: operationId,
 		Deprecated:  util.IsMethodDeprecated(method),
-		Tags:        []string{string(service.FullName())},
+		Tags:        []string{tag},
 		Description: util.FormatComments(loc),
 	}
 
@@ -258,7 +275,7 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 
 	// Responses
 	codeMap := orderedmap.New[string, *v3.Response]()
-	outputId := util.FormatTypeRef(opts, string(method.Output().FullName()))
+	outputId := util.FormatTypeRef(opts, util.DescriptorToId(opts, method.Output()))
 	codeMap.Set("200", &v3.Response{
 		Description: "Success",
 		Content: util.MakeMediaTypes(
@@ -299,7 +316,7 @@ func methodToOperaton(opts options.Options, method protoreflect.MethodDescriptor
 	}
 
 	// Request parameters
-	inputId := util.FormatTypeRef(opts, string(method.Input().FullName()))
+	inputId := util.FormatTypeRef(opts, util.DescriptorToId(opts, method.Input()))
 	if returnGet {
 		op.OperationId = op.OperationId + ".get"
 		op.Parameters = append(op.Parameters,

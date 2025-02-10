@@ -55,6 +55,8 @@ type Options struct {
 	TrimEnumNamePrefix bool
 	// Version
 	Version string
+	// No fqn
+	WithoutFqn bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -126,6 +128,8 @@ func FromString(s string) (Options, error) {
 			opts.FilterPublic = true
 		case param == "trim-enum-name-prefix":
 			opts.TrimEnumNamePrefix = true
+		case param == "without-fqn":
+			opts.WithoutFqn = true
 		case strings.HasPrefix(param, trimMessageSuffixParam):
 			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
 		case strings.HasPrefix(param, versionParam):
