@@ -268,7 +268,7 @@ paths:
 	})
 }
 
-func TestConvertWithOptionsNoFqn(t *testing.T) {
+func TestConvertWithNoFqn(t *testing.T) {
 	t.Run("with clashing message name", func(t *testing.T) {
 		opts := options.Options{
 			Path:           "test.openapi.yaml",
@@ -317,5 +317,60 @@ func TestConvertWithOptionsNoFqn(t *testing.T) {
 
 		_, err := converter.ConvertWithOptions(req, opts)
 		require.Error(t, err)
+	})
+
+	t.Run("with clashing message name", func(t *testing.T) {
+		opts := options.Options{
+			Path:           "test.openapi.yaml",
+			Format:         "yaml",
+			WithoutFqn:     true,
+			TrimConnectRPC: true,
+		}
+
+		req := &pluginpb.CodeGeneratorRequest{
+			ProtoFile: []*descriptorpb.FileDescriptorProto{
+				{
+					Name:    proto.String("a.proto"),
+					Package: proto.String("a"),
+					MessageType: []*descriptorpb.DescriptorProto{
+						{Name: proto.String("ZLastMessage")},
+					},
+				},
+				{
+					Name:    proto.String("b.proto"),
+					Package: proto.String("b"),
+					MessageType: []*descriptorpb.DescriptorProto{
+						{Name: proto.String("AFirstMessage")},
+					},
+				},
+				{
+					Name:    proto.String("test.proto"),
+					Package: proto.String("test"),
+
+					Dependency: []string{"a.proto", "b.proto"},
+					Service: []*descriptorpb.ServiceDescriptorProto{
+						{
+							Name: proto.String("ExampleApiService"),
+							Method: []*descriptorpb.MethodDescriptorProto{
+								{
+									Name:       proto.String("ExampleApiPath"),
+									InputType:  proto.String(".a.ZLastMessage"),
+									OutputType: proto.String(".b.AFirstMessage"),
+								},
+							},
+						},
+					},
+				},
+			},
+			FileToGenerate: []string{"a", "b", "test.proto"},
+		}
+
+		resp, err := converter.ConvertWithOptions(req, opts)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		require.Len(t, resp.File, 1)
+
+		content := resp.File[0].GetContent()
+		require.Less(t, strings.Index(content, "AFirstMessage"), strings.Index(content, "ZLastMessage"), "AFirstMessage should be before ZLastMessage")
 	})
 }

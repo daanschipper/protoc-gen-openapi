@@ -151,6 +151,9 @@ func (st *State) SortedMessages() []protoreflect.MessageDescriptor {
 		messages = append(messages, message)
 	}
 	sort.Slice(messages, func(i, j int) bool {
+		if st.Opts.WithoutFqn {
+			return messages[i].Name() < messages[j].Name()
+		}
 		return messages[i].FullName() < messages[j].FullName()
 	})
 	return messages
