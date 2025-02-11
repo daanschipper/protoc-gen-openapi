@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/pb33f/libopenapi/datamodel/high/base"
@@ -118,6 +119,24 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 			_, s := schema.MessageToSchema(opts, md.Input())
 			for name := range fieldNamesInPath {
 				s.Properties.Delete(name)
+
+				index := slices.Index(s.Required, name)
+				if index != -1 {
+					// Require to copy the required array as deleting it from slice removes it from both the
+					// components.schema as this path item.
+					newRequired := make([]string, 0, len(s.Required)-1)
+					for i, req := range s.Required {
+						if i == index {
+							continue
+						}
+						newRequired = append(newRequired, req)
+					}
+
+					s.Required = newRequired
+					if len(s.Required) == 0 {
+						s.Required = nil
+					}
+				}
 			}
 			if s.Properties.Len() > 0 {
 				op.RequestBody = util.MethodToRequestBody(opts, md, base.CreateSchemaProxy(s), false)

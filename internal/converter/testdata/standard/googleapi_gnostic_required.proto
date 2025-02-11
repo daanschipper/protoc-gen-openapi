@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package standard_googleapi_gnostic_required;
+
+import "google/api/annotations.proto";
+import "gnostic/openapi/v3/annotations.proto";
+
+service Foo {
+  rpc FooBar(BarRequest) returns (BarReply) {}
+
+  rpc PatchMethod(PatchRequest) returns (PatchReply) {
+    option (google.api.http) = {
+      patch: "/v1/patchmethod/{id}"
+      body: "*"
+    };
+  }
+}
+
+// The request message containing the user's name.
+message BarRequest {
+  Name name = 1;
+}
+
+// The response message containing the greetings
+message BarReply {
+  string message = 1;
+}
+
+message Name {
+  string name = 1;
+}
+
+message PatchRequest {
+  option (gnostic.openapi.v3.schema) = {
+    title: "Patch Request";
+    required: ["id"];
+  };
+  string id = 1;
+  string name = 2;
+}
+
+message PatchReply {
+  string message = 1;
+}
