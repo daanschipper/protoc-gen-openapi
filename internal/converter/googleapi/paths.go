@@ -2,6 +2,7 @@ package googleapi
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"slices"
@@ -19,7 +20,7 @@ import (
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
 )
 
-func MakePathItems(opts options.Options, md protoreflect.MethodDescriptor) *orderedmap.Map[string, *v3.PathItem] {
+func MakePathItems(opts options.Options, spec *v3.Document, md protoreflect.MethodDescriptor, schemas map[string]map[string]struct{}) *orderedmap.Map[string, *v3.PathItem] {
 	if opts.IgnoreGoogleapiHTTP {
 		return nil
 	}
@@ -31,10 +32,10 @@ func MakePathItems(opts options.Options, md protoreflect.MethodDescriptor) *orde
 	if !ok {
 		return nil
 	}
-	return httpRuleToPathMap(opts, md, rule)
+	return httpRuleToPathMap(opts, spec, schemas, md, rule)
 }
 
-func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, rule *annotations.HttpRule) *orderedmap.Map[string, *v3.PathItem] {
+func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[string]map[string]struct{}, md protoreflect.MethodDescriptor, rule *annotations.HttpRule) *orderedmap.Map[string, *v3.PathItem] {
 	var method, template string
 	switch pattern := rule.GetPattern().(type) {
 	case *annotations.HttpRule_Get:
@@ -140,6 +141,19 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 			}
 			if s.Properties.Len() > 0 {
 				op.RequestBody = util.MethodToRequestBody(opts, md, base.CreateSchemaProxy(s), false)
+
+				// Remove the reference to the schema.
+				id := util.DescriptorToId(opts, md.Input())
+				references := schemas[id]
+				delete(references, fmt.Sprintf("%s-input", md.FullName()))
+
+				// If the requested object is no longer referenced remove it completely from the spec
+				if len(references) == 0 {
+					_, present := spec.Components.Schemas.Delete(id)
+					if !present {
+						log.Fatalf("Wanted to delete schema %s but it was not found", id)
+					}
+				}
 			}
 		} else {
 			inputId := util.FormatTypeRef(opts, util.DescriptorToId(opts, md.Input()))
@@ -210,7 +224,7 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 	paths.Set(partsToOpenAPIPath(tokens), pathItem)
 
 	for _, binding := range rule.AdditionalBindings {
-		pathMap := httpRuleToPathMap(opts, md, binding)
+		pathMap := httpRuleToPathMap(opts, nil, nil, md, binding)
 		for pair := pathMap.First(); pair != nil; pair = pair.Next() {
 			path := util.MakePath(opts, pair.Key())
 			paths.Set(path, pair.Value())

@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"fmt"
 	"github.com/fatih/camelcase"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
@@ -20,17 +21,19 @@ import (
 )
 
 type State struct {
-	Opts        options.Options
-	CurrentFile protoreflect.FileDescriptor
-	Messages    map[protoreflect.MessageDescriptor]struct{}
-	Enums       map[protoreflect.EnumDescriptor]struct{}
+	Opts             options.Options
+	CurrentFile      protoreflect.FileDescriptor
+	Messages         map[protoreflect.MessageDescriptor]struct{}
+	ReferralMessages map[string]map[string]struct{}
+	Enums            map[protoreflect.EnumDescriptor]struct{}
 }
 
 func NewState(opts options.Options) *State {
 	return &State{
-		Opts:     opts,
-		Messages: map[protoreflect.MessageDescriptor]struct{}{},
-		Enums:    map[protoreflect.EnumDescriptor]struct{}{},
+		Opts:             opts,
+		Messages:         map[protoreflect.MessageDescriptor]struct{}{},
+		ReferralMessages: map[string]map[string]struct{}{},
+		Enums:            map[protoreflect.EnumDescriptor]struct{}{},
 	}
 }
 
@@ -48,7 +51,7 @@ func (st *State) CollectFile(tt protoreflect.FileDescriptor) {
 		// Files can have messages
 		messages := tt.Messages()
 		for i := 0; i < messages.Len(); i++ {
-			st.CollectMessage(messages.Get(i))
+			st.CollectMessage(string(messages.Get(i).FullName()), messages.Get(i))
 		}
 	}
 
@@ -77,8 +80,8 @@ func (st *State) CollectFile(tt protoreflect.FileDescriptor) {
 				}
 			}
 
-			st.CollectMessage(method.Input())
-			st.CollectMessage(method.Output())
+			st.CollectMessage(fmt.Sprintf("%s-input", method.FullName()), method.Input())
+			st.CollectMessage(fmt.Sprintf("%s-output", method.FullName()), method.Output())
 		}
 	}
 }
@@ -94,15 +97,20 @@ func (st *State) CollectEnum(tt protoreflect.EnumDescriptor) {
 	st.Enums[tt] = struct{}{}
 }
 
-func (st *State) CollectMessage(tt protoreflect.MessageDescriptor) {
+func (st *State) CollectMessage(referral string, tt protoreflect.MessageDescriptor) {
 	if tt == nil {
 		return
 	}
 	// Make sure we're not recursing through the same message a second time
 	if _, ok := st.Messages[tt]; ok {
+		// Save the referral if not already referred.
+		st.ReferralMessages[string(tt.FullName())][referral] = struct{}{}
 		return
 	}
 	st.Messages[tt] = struct{}{}
+	st.ReferralMessages[string(tt.FullName())] = map[string]struct{}{
+		referral: {},
+	}
 
 	// Messages can have fields
 	fields := tt.Fields()
@@ -120,7 +128,7 @@ func (st *State) CollectMessage(tt protoreflect.MessageDescriptor) {
 	messages := tt.Messages()
 	for i := 0; i < messages.Len(); i++ {
 		message := messages.Get(i)
-		st.CollectMessage(message)
+		st.CollectMessage(string(message.FullName()), message)
 	}
 }
 
@@ -129,7 +137,10 @@ func (st *State) CollectField(tt protoreflect.FieldDescriptor) {
 		return
 	}
 	st.CollectEnum(tt.Enum())
-	st.CollectMessage(tt.Message())
+	if tt.Message() != nil {
+		st.CollectMessage(string(tt.FullName()), tt.Message())
+	}
+
 	st.CollectField(tt.MapKey())
 	st.CollectField(tt.MapValue())
 }

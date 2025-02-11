@@ -237,7 +237,7 @@ func specToFile(opts options.Options, spec *v3.Document) (string, error) {
 
 func appendToSpec(opts options.Options, spec *v3.Document, fd protoreflect.FileDescriptor) error {
 	gnostic.SpecWithFileAnnotations(spec, fd)
-	components, err := fileToComponents(opts, fd)
+	components, referredSchemas, err := fileToComponents(opts, fd)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func appendToSpec(opts options.Options, spec *v3.Document, fd protoreflect.FileD
 	appendServiceDocs(opts, spec, fd)
 	util.AppendComponents(spec, components)
 
-	if err := addPathItemsFromFile(opts, fd, spec.Paths); err != nil {
+	if err := addPathItemsFromFile(opts, fd, spec, referredSchemas); err != nil {
 		return err
 	}
 	spec.Tags = append(spec.Tags, fileToTags(opts, fd)...)

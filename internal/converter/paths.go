@@ -16,7 +16,8 @@ import (
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
 )
 
-func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, paths *v3.Paths) error {
+func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, spec *v3.Document, schemas map[string]map[string]struct{}) error {
+	paths := spec.Paths
 	services := fd.Services()
 	for i := 0; i < services.Len(); i++ {
 		service := services.Get(i)
@@ -43,7 +44,7 @@ func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, 
 				}
 			}
 
-			pathItems := googleapi.MakePathItems(opts, method)
+			pathItems := googleapi.MakePathItems(opts, spec, method, schemas)
 
 			// Helper function to update or set path items
 			addPathItem := func(path string, newItem *v3.PathItem) {

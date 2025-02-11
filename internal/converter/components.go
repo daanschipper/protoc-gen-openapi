@@ -16,7 +16,7 @@ import (
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
 )
 
-func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*highv3.Components, error) {
+func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*v3.Components, map[string]map[string]struct{}, error) {
 	// Add schema from messages/enums
 	components := &highv3.Components{
 		Schemas:         orderedmap.New[string, *base.SchemaProxy](),
@@ -41,14 +41,14 @@ func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*hi
 		for message := range st.Messages {
 			messageWithoutFqn := util.TrimFqn(opts, message)
 			if clash, ok := foo[messageWithoutFqn]; ok {
-				return nil, fmt.Errorf("message with identical name, '%s' and '%s, last occurence will be used, results in incorrect openapi spec", clash, string(message.FullName()))
+				return nil, nil, fmt.Errorf("message with identical name, '%s' and '%s, last occurence will be used, results in incorrect openapi spec", clash, string(message.FullName()))
 			}
 			foo[messageWithoutFqn] = string(message.FullName())
 		}
 	}
 
 	if opts.TrimConnectRPC == true {
-		return components, nil
+		return components, st.ReferralMessages, nil
 	}
 
 	hasGetRequests := false
@@ -156,5 +156,5 @@ func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*hi
 		components.Schemas.Set(anyPair.ID, base.CreateSchemaProxy(anyPair.Schema))
 	}
 
-	return components, nil
+	return components, st.ReferralMessages, nil
 }
