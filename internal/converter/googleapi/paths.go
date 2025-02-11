@@ -156,9 +156,26 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 				}
 			}
 		} else {
-			inputId := util.FormatTypeRef(opts, util.DescriptorToId(opts, md.Input()))
-			s := base.CreateSchemaProxyRef("#/components/schemas/" + inputId)
-			op.RequestBody = util.MethodToRequestBody(opts, md, s, false)
+
+			// Remove the reference to the schema.
+			id := util.DescriptorToId(opts, md.Input())
+			references := schemas[id]
+			delete(references, fmt.Sprintf("%s-input", md.FullName()))
+
+			// If the requested object is no longer referenced remove it completely from the spec
+			if len(references) == 0 {
+				_, present := spec.Components.Schemas.Delete(id)
+				if !present {
+					log.Fatalf("Wanted to delete schema %s but it was not found", id)
+				}
+				// return request body with parameters
+				_, s := schema.MessageToSchema(opts, md.Input())
+				op.RequestBody = util.MethodToRequestBody(opts, md, base.CreateSchemaProxy(s), false)
+			} else {
+				inputId := util.FormatTypeRef(opts, util.DescriptorToId(opts, md.Input()))
+				s := base.CreateSchemaProxyRef("#/components/schemas/" + inputId)
+				op.RequestBody = util.MethodToRequestBody(opts, md, s, false)
+			}
 		}
 
 	default:
