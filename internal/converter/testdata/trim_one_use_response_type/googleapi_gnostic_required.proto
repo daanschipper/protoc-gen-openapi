@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package trim_one_use_response_type_googleapi_gnostic_required;
+
+import "google/api/annotations.proto";
+import "gnostic/openapi/v3/annotations.proto";
+
+service SomeOtherServiceName {
+  rpc PatchMethod(PatchRequest) returns (PatchReply) {
+    option (google.api.http) = {
+      patch: "/v1/patchmethod/{id}"
+      body: "*"
+    };
+  }
+  rpc GetPayment(GetRequest) returns (GetReply) {
+    option (google.api.http) = {
+      get: "/v1/get/{id}"
+    };
+  }
+
+  rpc UsingSameReply1(FooRequest) returns (FooBarReply) {
+    option (google.api.http) = {
+      get: "/v1/samereplyobject1/{id}"
+    };
+  }
+  rpc UsingSameReply2(BarRequest) returns (FooBarReply) {
+    option (google.api.http) = {
+      get: "/v1/samereplyobject2/{id}"
+    };
+  }
+}
+
+message GetRequest {
+  string id = 1;
+}
+
+message GetReply {
+  string message = 1;
+}
+
+message PatchRequest {
+  option (gnostic.openapi.v3.schema) = {
+    title: "Patch Request";
+    required: ["id"];
+  };
+  string id = 1;
+  string name = 2;
+}
+
+message PatchReply {
+  string message = 1;
+}
+
+message FooRequest {
+  string id = 1;
+}
+
+message BarRequest {
+  string id = 1;
+}
+
+message FooBarReply {
+  string message = 1;
+}
