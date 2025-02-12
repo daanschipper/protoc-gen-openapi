@@ -123,7 +123,7 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 
 		// If the requested object is no longer referenced remove it completely from the spec
 		if len(references) == 0 {
-			_, present := spec.Components.Schemas.Delete(id)
+			_, present := spec.Components.Schemas.Delete(util.DescriptorToId(opts, md.Input()))
 			if !present {
 				log.Fatalf("Wanted to delete schema %s but it was not found", id)
 			}
