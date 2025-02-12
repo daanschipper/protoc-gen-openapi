@@ -57,6 +57,8 @@ type Options struct {
 	Version string
 	// No fqn
 	WithoutFqn bool
+	// Global header
+	GlobalHeader bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -134,6 +136,8 @@ func FromString(s string) (Options, error) {
 			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
 		case strings.HasPrefix(param, versionParam):
 			opts.Version = param[len(versionParam):]
+		case param == "global-header":
+			opts.GlobalHeader = true
 		case strings.HasPrefix(param, "content-types="):
 			for _, contentType := range strings.Split(param[14:], ";") {
 				contentType = strings.TrimSpace(contentType)

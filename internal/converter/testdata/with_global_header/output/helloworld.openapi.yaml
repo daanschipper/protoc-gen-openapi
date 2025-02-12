@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: helloworld_with_global_header
+  version: 1.1.2
+paths:
+  /helloworld_with_global_header.Greeter/SayHello:
+    post:
+      tags:
+        - helloworld_with_global_header.Greeter
+      summary: SayHello
+      description: Sends a greeting
+      operationId: helloworld_with_global_header.Greeter.SayHello
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/helloworld_with_global_header.HelloRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/helloworld_with_global_header.HelloReply'
+  /helloworld_with_global_header.Greeter/WriteHello:
+    post:
+      tags:
+        - helloworld_with_global_header.Greeter
+      summary: WriteHello
+      description: Writes a greeting (has side effects)
+      operationId: helloworld_with_global_header.Greeter.WriteHello
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/helloworld_with_global_header.HelloRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/helloworld_with_global_header.HelloReply'
+  /v1/hellowithannotation:
+    post:
+      tags:
+        - helloworld_with_global_header.Greeter
+      summary: HelloWithGoogleAnnotation
+      operationId: helloworld_with_global_header.Greeter.HelloWithGoogleAnnotation
+      parameters:
+        - name: X-Rootline-Version
+          in: header
+          description: The major version of the Rootline API.
+          required: true
+          schema:
+            type: string
+            default: 1.1.2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  title: name
+              title: HelloWithGoogleAnnotationRequest
+              additionalProperties: false
+              description: The request message containing the user's name.
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/helloworld_with_global_header.HelloWithGoogleAnnotationReply'
+components:
+  schemas:
+    helloworld_with_global_header.HelloReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+      title: HelloReply
+      additionalProperties: false
+      description: The response message containing the greetings
+    helloworld_with_global_header.HelloRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+      title: HelloRequest
+      additionalProperties: false
+      description: The request message containing the user's name.
+    helloworld_with_global_header.HelloWithGoogleAnnotationReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+      title: HelloWithGoogleAnnotationReply
+      additionalProperties: false
+      description: The response message containing the greetings
+security: []
+tags:
+  - name: helloworld_with_global_header.Greeter
+    description: The greeting service definition.

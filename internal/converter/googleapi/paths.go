@@ -2,6 +2,7 @@ package googleapi
 
 import (
 	"fmt"
+	"github.com/pb33f/libopenapi/utils"
 	"log"
 	"log/slog"
 	"net/http"
@@ -235,6 +236,20 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 				false,
 			),
 		}
+	}
+
+	if opts.GlobalHeader {
+		globalParam := &v3.Parameter{
+			Name:        "X-Rootline-Version",
+			Required:    util.BoolPtr(true),
+			In:          "header",
+			Description: "The major version of the Rootline API.",
+			Schema: base.CreateSchemaProxy(&base.Schema{
+				Type:    []string{"string"},
+				Default: utils.CreateStringNode(opts.Version),
+			}),
+		}
+		op.Parameters = append([]*v3.Parameter{globalParam}, op.Parameters...)
 	}
 
 	switch method {
