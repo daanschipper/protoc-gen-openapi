@@ -2,18 +2,18 @@ package converter
 
 import (
 	"fmt"
+	oasExtension "github.com/daanschipper/protoc-gen-openapi/openapi"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
-	oasExtension "github.com/sudorandom/protoc-gen-connect-openapi/openapi"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/gnostic"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/googleapi"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/gnostic"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/googleapi"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/options"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/util"
 )
 
 func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, spec *v3.Document, schemas map[string]map[string]struct{}) error {
