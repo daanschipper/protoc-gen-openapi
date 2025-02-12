@@ -117,13 +117,13 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 	case "":
 		op.Parameters = append(op.Parameters, flattenToParams(opts, md.Input(), "", fieldNamesInPath)...)
 		// Remove the reference to the schema.
-		id := util.DescriptorToId(opts, md.Input())
+		id := string(md.Input().FullName())
 		references := schemas[id]
 		delete(references, fmt.Sprintf("%s-input", md.FullName()))
 
 		// If the requested object is no longer referenced remove it completely from the spec
 		if len(references) == 0 {
-			_, present := spec.Components.Schemas.Delete(id)
+			_, present := spec.Components.Schemas.Delete(util.DescriptorToId(opts, md.Input()))
 			if !present {
 				log.Fatalf("Wanted to delete schema %s but it was not found", id)
 			}
@@ -156,13 +156,13 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 				op.RequestBody = util.MethodToRequestBody(opts, md, base.CreateSchemaProxy(s), false)
 
 				// Remove the reference to the schema.
-				id := util.DescriptorToId(opts, md.Input())
+				id := string(md.Input().FullName())
 				references := schemas[id]
 				delete(references, fmt.Sprintf("%s-input", md.FullName()))
 
 				// If the requested object is no longer referenced remove it completely from the spec
 				if len(references) == 0 {
-					_, present := spec.Components.Schemas.Delete(id)
+					_, present := spec.Components.Schemas.Delete(util.DescriptorToId(opts, md.Input()))
 					if !present {
 						log.Fatalf("Wanted to delete schema %s but it was not found", id)
 					}
@@ -171,13 +171,13 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 		} else {
 
 			// Remove the reference to the schema.
-			id := util.DescriptorToId(opts, md.Input())
+			id := string(md.Input().FullName())
 			references := schemas[id]
 			delete(references, fmt.Sprintf("%s-input", md.FullName()))
 
 			// If the requested object is no longer referenced remove it completely from the spec
 			if len(references) == 0 {
-				_, present := spec.Components.Schemas.Delete(id)
+				_, present := spec.Components.Schemas.Delete(util.DescriptorToId(opts, md.Input()))
 				if !present {
 					log.Fatalf("Wanted to delete schema %s but it was not found", id)
 				}
@@ -209,8 +209,23 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 	mediaType := orderedmap.New[string, *v3.MediaType]()
 	var outputSchema *base.SchemaProxy
 	if rule.ResponseBody == "" {
-		outputId := util.FormatTypeRef(opts, util.DescriptorToId(opts, md.Output()))
-		outputSchema = base.CreateSchemaProxyRef("#/components/schemas/" + outputId)
+		id := string(md.Output().FullName())
+		references := schemas[id]
+		// If this is the only method referencing the schema, then reference it directly
+		// Otherwise, reference it by id, other methods might already use the schema as reference.
+		if opts.TrimOneUseResponseType && len(references) == 1 {
+			delete(references, fmt.Sprintf("%s-output", md.FullName()))
+			_, present := spec.Components.Schemas.Delete(util.DescriptorToId(opts, md.Output()))
+			if !present {
+				log.Fatalf("Wanted to delete schema %s but it was not found", id)
+			}
+			// return request body with parameters
+			_, s := schema.MessageToSchema(opts, md.Output())
+			outputSchema = base.CreateSchemaProxy(s)
+		} else {
+			outputId := util.FormatTypeRef(opts, util.DescriptorToId(opts, md.Output()))
+			outputSchema = base.CreateSchemaProxyRef("#/components/schemas/" + outputId)
+		}
 	} else {
 		if fd, _ := resolveField(md.Output(), rule.ResponseBody); fd != nil {
 			outputSchema = schema.FieldToSchema(opts, nil, fd)

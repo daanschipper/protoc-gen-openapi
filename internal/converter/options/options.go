@@ -59,6 +59,8 @@ type Options struct {
 	WithoutFqn bool
 	// Global header
 	GlobalHeader bool
+	// Trim one use response type, reference directly as response instead of ref
+	TrimOneUseResponseType bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -132,6 +134,8 @@ func FromString(s string) (Options, error) {
 			opts.TrimEnumNamePrefix = true
 		case param == "without-fqn":
 			opts.WithoutFqn = true
+		case param == "trim-one-use-response-types":
+			opts.TrimOneUseResponseType = true
 		case strings.HasPrefix(param, trimMessageSuffixParam):
 			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
 		case strings.HasPrefix(param, versionParam):
