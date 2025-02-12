@@ -79,7 +79,16 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/HelloWithGoogleAnnotationRequest"
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "title": "name"
+                  }
+                },
+                "title": "HelloWithGoogleAnnotationRequest",
+                "additionalProperties": false,
+                "description": "The request message containing the user's name."
               }
             }
           },
@@ -137,18 +146,6 @@
         "title": "HelloWithGoogleAnnotationReply",
         "additionalProperties": false,
         "description": "The response message containing the greetings"
-      },
-      "HelloWithGoogleAnnotationRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "name"
-          }
-        },
-        "title": "HelloWithGoogleAnnotationRequest",
-        "additionalProperties": false,
-        "description": "The request message containing the user's name."
       }
     }
   },

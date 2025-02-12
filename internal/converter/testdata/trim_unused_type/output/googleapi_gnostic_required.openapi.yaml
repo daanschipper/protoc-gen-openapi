@@ -40,8 +40,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/has_unused_types_googleapi_gnostic_required.PatchReply'
+  /v1/get/{id}:
+    get:
+      tags:
+        - has_unused_types_googleapi_gnostic_required.SomeOtherServiceName
+      summary: GetPayment
+      operationId: has_unused_types_googleapi_gnostic_required.SomeOtherServiceName.GetPayment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: id
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/has_unused_types_googleapi_gnostic_required.GetReply'
 components:
   schemas:
+    has_unused_types_googleapi_gnostic_required.GetReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+      title: GetReply
+      additionalProperties: false
     has_unused_types_googleapi_gnostic_required.PatchReply:
       type: object
       properties:

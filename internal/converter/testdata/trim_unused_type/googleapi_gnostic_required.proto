@@ -12,6 +12,19 @@ service SomeOtherServiceName {
       body: "*"
     };
   }
+  rpc GetPayment(GetRequest) returns (GetReply) {
+    option (google.api.http) = {
+      get: "/v1/get/{id}"
+    };
+  }
+}
+
+message GetRequest {
+  string id = 1;
+}
+
+message GetReply {
+  string message = 1;
 }
 
 message PatchRequest {

@@ -115,6 +115,18 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 	switch rule.Body {
 	case "":
 		op.Parameters = append(op.Parameters, flattenToParams(opts, md.Input(), "", fieldNamesInPath)...)
+		// Remove the reference to the schema.
+		id := util.DescriptorToId(opts, md.Input())
+		references := schemas[id]
+		delete(references, fmt.Sprintf("%s-input", md.FullName()))
+
+		// If the requested object is no longer referenced remove it completely from the spec
+		if len(references) == 0 {
+			_, present := spec.Components.Schemas.Delete(id)
+			if !present {
+				log.Fatalf("Wanted to delete schema %s but it was not found", id)
+			}
+		}
 	case "*":
 		if len(fieldNamesInPath) > 0 {
 			_, s := schema.MessageToSchema(opts, md.Input())
