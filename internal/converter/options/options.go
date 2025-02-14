@@ -51,6 +51,8 @@ type Options struct {
 	DirectProtoMessage     bool
 	// Strip suffix from message
 	TrimMessageSuffix string
+	// Strip suffix from service
+	TrimServiceSuffix string
 	// Trim the enum name prefix from the enum value names.
 	TrimEnumNamePrefix bool
 	// Version
@@ -96,6 +98,7 @@ func FromString(s string) (Options, error) {
 		supportedProtocols[proto.Name] = struct{}{}
 	}
 	trimMessageSuffixParam := "trim-message-suffix="
+	trimServiceSuffixParam := "trim-service-suffix="
 	versionParam := "version="
 
 	contentTypes := map[string]struct{}{}
@@ -138,6 +141,8 @@ func FromString(s string) (Options, error) {
 			opts.TrimOneUseResponseType = true
 		case strings.HasPrefix(param, trimMessageSuffixParam):
 			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
+		case strings.HasPrefix(param, trimServiceSuffixParam):
+			opts.TrimServiceSuffix = param[len(trimServiceSuffixParam):]
 		case strings.HasPrefix(param, versionParam):
 			opts.Version = param[len(versionParam):]
 		case param == "global-header":

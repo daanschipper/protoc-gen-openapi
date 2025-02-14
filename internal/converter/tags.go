@@ -4,6 +4,7 @@ import (
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	highbase "github.com/pb33f/libopenapi/datamodel/high/base"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"strings"
 
 	"github.com/daanschipper/protoc-gen-openapi/internal/converter/options"
 	"github.com/daanschipper/protoc-gen-openapi/internal/converter/util"
@@ -23,6 +24,10 @@ func fileToTags(opts options.Options, fd protoreflect.FileDescriptor) []*base.Ta
 		tagName := string(service.FullName())
 		if opts.WithoutFqn {
 			tagName = string(service.Name())
+		}
+
+		if opts.TrimServiceSuffix != "" {
+			tagName = strings.TrimSuffix(tagName, opts.TrimServiceSuffix)
 		}
 
 		tags = append(tags, &base.Tag{
