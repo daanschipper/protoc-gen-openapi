@@ -98,7 +98,7 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 		if field != nil {
 			// This field is only top level, so we will filter out the param from
 			// query/param or request body
-			fieldNamesInPath[string(field.FullName())] = struct{}{}
+			fieldNamesInPath[string(field.Name())] = struct{}{}
 			fieldNamesInPath[strings.Join(jsonPath, ".")] = struct{}{} // sometimes JSON field names are used
 			loc := fd.SourceLocations().ByDescriptor(field)
 			op.Parameters = append(op.Parameters, &v3.Parameter{

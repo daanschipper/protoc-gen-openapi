@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package googleapi_path_underscores;
+
+import "google/api/annotations.proto";
+
+service Service {
+  rpc Method(Request) returns (Response) {
+    option (google.api.http) = {
+      post: "/v1/pathbefore/{id_with_under_scores}/pathafter"
+      body: "*"
+    };
+  };
+}
+
+message Request {
+  string id_with_under_scores = 1;
+  string reference = 2;
+}
+
+message Response {
+  string message = 1;
+}
