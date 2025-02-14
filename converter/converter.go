@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"slices"
 
-	intconverter "github.com/sudorandom/protoc-gen-connect-openapi/internal/converter"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
+	intconverter "github.com/daanschipper/protoc-gen-openapi/internal/converter"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/options"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
