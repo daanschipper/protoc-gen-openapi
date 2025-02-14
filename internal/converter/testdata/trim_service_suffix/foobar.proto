@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package trim_service_suffix_foobar;
+
+import "google/api/annotations.proto";
+
+service FooSuffixToTrim {
+  rpc Foo(Request) returns (Reply) {
+    option (google.api.http) = {
+      post: "/v1/foo"
+      body: "*"
+    };
+  }
+}
+
+service BarSuffixToNotTrim {
+  rpc Bar(Request) returns (Reply) {
+    option (google.api.http) = {
+      post: "/v1/bar"
+      body: "*"
+    };
+  }
+}
+
+message Request {
+  string name = 1;
+}
+
+message Reply {
+  string name = 1;
+}

@@ -34,6 +34,7 @@ var scenarios = []Scenario{
 	{Name: "trim_unused_type", Options: "trim-unused-types"},
 	{Name: "trim_one_use_response_type", Options: "trim-unused-types,trim-one-use-response-types"},
 	{Name: "trim_message_suffix", Options: "trim-connect-rpc,trim-message-suffix=SuffixToTrim"},
+	{Name: "trim_service_suffix", Options: "trim-connect-rpc,trim-service-suffix=SuffixToTrim,without-fqn"},
 	{Name: "trim_enum_name_prefix", Options: "trim-connect-rpc,trim-enum-name-prefix"},
 	{Name: "explicit_optional_fields", Options: "explicit-optional-fields,allow-get,with-streaming,with-service-descriptions,trim-connect-rpc"},
 	{Name: "filter_public", Options: "explicit-optional-fields,allow-get,with-streaming,with-service-descriptions,trim-connect-rpc,filter-public"},
