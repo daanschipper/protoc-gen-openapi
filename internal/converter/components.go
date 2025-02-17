@@ -193,7 +193,7 @@ func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*v3
 
 			components.Schemas.Set("Error", base.CreateSchemaProxy(&base.Schema{
 				Title:       "Error",
-				Description: `Error type.`,
+				Description: `Error object containing information about the error.`,
 				Properties:  errorProps,
 				Type:        []string{"object"},
 			}))
