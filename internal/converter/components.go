@@ -166,7 +166,7 @@ func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*v3
 			errorProps.Set("error_type", base.CreateSchemaProxy(&base.Schema{
 				Description: "The type of error returned.",
 				Type:        []string{"string"},
-				Examples:    []*yaml.Node{utils.CreateStringNode("not_found")},
+				Examples:    []*yaml.Node{utils.CreateStringNode("validation_error")},
 				Enum: []*yaml.Node{
 					utils.CreateStringNode("idempotency_error"),
 					utils.CreateStringNode("internal_error"),
@@ -192,11 +192,10 @@ func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*v3
 			}))
 
 			components.Schemas.Set("Error", base.CreateSchemaProxy(&base.Schema{
-				Title:                "Error",
-				Description:          `Error type.`,
-				Properties:           errorProps,
-				Type:                 []string{"object"},
-				AdditionalProperties: &base.DynamicValue[*base.SchemaProxy, bool]{N: 1, B: true},
+				Title:       "Error",
+				Description: `Error type.`,
+				Properties:  errorProps,
+				Type:        []string{"object"},
 			}))
 		}
 	}
