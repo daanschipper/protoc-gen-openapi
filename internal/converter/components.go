@@ -158,24 +158,36 @@ func fileToComponents(opts options.Options, fd protoreflect.FileDescriptor) (*v3
 		if opts.CustomDefaultError {
 			errorProps := orderedmap.New[string, *base.SchemaProxy]()
 			errorProps.Set("http_status_code", base.CreateSchemaProxy(&base.Schema{
-				Description: "",
+				Description: "The HTTP status code of the response.",
+				Examples:    []*yaml.Node{utils.CreateStringNode("404")},
 				Type:        []string{"integer"},
 				Format:      "int32",
 			}))
 			errorProps.Set("error_type", base.CreateSchemaProxy(&base.Schema{
-				Description: "",
+				Description: "The type of error returned.",
 				Type:        []string{"string"},
+				Examples:    []*yaml.Node{utils.CreateStringNode("not_found")},
+				Enum: []*yaml.Node{
+					utils.CreateStringNode("idempotency_error"),
+					utils.CreateStringNode("internal_error"),
+					utils.CreateStringNode("security_error"),
+					utils.CreateStringNode("syntax_error"),
+					utils.CreateStringNode("validation_error"),
+				},
 			}))
 			errorProps.Set("error_code", base.CreateSchemaProxy(&base.Schema{
-				Description: "",
+				Description: "A short explanation detailing the error.",
+				Examples:    []*yaml.Node{utils.CreateStringNode("not_found")},
 				Type:        []string{"string"},
 			}))
 			errorProps.Set("error_message", base.CreateSchemaProxy(&base.Schema{
-				Description: "",
+				Description: "A developer-facing error message.",
+				Examples:    []*yaml.Node{utils.CreateStringNode("Resource not found")},
 				Type:        []string{"string"},
 			}))
 			errorProps.Set("field", base.CreateSchemaProxy(&base.Schema{
-				Description: "",
+				Description: "Indicates the field that caused the error, if applicable.",
+				Examples:    []*yaml.Node{utils.CreateStringNode("id")},
 				Type:        []string{"string"},
 			}))
 
