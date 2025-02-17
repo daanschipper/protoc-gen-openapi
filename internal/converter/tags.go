@@ -6,8 +6,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"strings"
 
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/options"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/util"
 )
 
 func fileToTags(opts options.Options, fd protoreflect.FileDescriptor) []*base.Tag {

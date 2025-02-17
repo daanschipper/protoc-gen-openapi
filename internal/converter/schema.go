@@ -14,10 +14,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/schema"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
-	oasExtension "github.com/sudorandom/protoc-gen-connect-openapi/openapi"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/options"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/schema"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/util"
+	oasExtension "github.com/daanschipper/protoc-gen-openapi/openapi"
 )
 
 type State struct {
