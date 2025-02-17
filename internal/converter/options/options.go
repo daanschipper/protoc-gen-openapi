@@ -63,6 +63,8 @@ type Options struct {
 	GlobalHeader bool
 	// Trim one use response type, reference directly as response instead of ref
 	TrimOneUseResponseType bool
+	// Custom default error
+	CustomDefaultError bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -139,6 +141,8 @@ func FromString(s string) (Options, error) {
 			opts.WithoutFqn = true
 		case param == "trim-one-use-response-types":
 			opts.TrimOneUseResponseType = true
+		case param == "custom-default-error":
+			opts.CustomDefaultError = true
 		case strings.HasPrefix(param, trimMessageSuffixParam):
 			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
 		case strings.HasPrefix(param, trimServiceSuffixParam):

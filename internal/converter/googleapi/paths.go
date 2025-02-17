@@ -257,6 +257,18 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 		}
 	}
 
+	if opts.CustomDefaultError {
+		op.Responses.Default = &v3.Response{
+			Description: "Error",
+			Content: util.MakeMediaTypes(
+				opts,
+				base.CreateSchemaProxyRef("#/components/schemas/Error"),
+				false,
+				false,
+			),
+		}
+	}
+
 	if opts.GlobalHeader {
 		globalParam := &v3.Parameter{
 			Name:        "X-Rootline-Version",
