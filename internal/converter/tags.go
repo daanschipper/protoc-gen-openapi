@@ -30,6 +30,12 @@ func fileToTags(opts options.Options, fd protoreflect.FileDescriptor) []*base.Ta
 			tagName = strings.TrimSuffix(tagName, opts.TrimServiceSuffix)
 		}
 
+		if len(opts.RenameService) != 0 {
+			if tagName == opts.RenameService[0] {
+				tagName = opts.RenameService[1]
+			}
+		}
+
 		tags = append(tags, &base.Tag{
 			Name:        tagName,
 			Description: description,
