@@ -53,6 +53,8 @@ type Options struct {
 	TrimMessageSuffix string
 	// Strip suffix from service
 	TrimServiceSuffix string
+	// Strip suffix from service
+	RenameService []string
 	// Trim the enum name prefix from the enum value names.
 	TrimEnumNamePrefix bool
 	// Version
@@ -101,6 +103,7 @@ func FromString(s string) (Options, error) {
 	}
 	trimMessageSuffixParam := "trim-message-suffix="
 	trimServiceSuffixParam := "trim-service-suffix="
+	renameServiceParam := "rename-service="
 	versionParam := "version="
 
 	contentTypes := map[string]struct{}{}
@@ -147,6 +150,8 @@ func FromString(s string) (Options, error) {
 			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
 		case strings.HasPrefix(param, trimServiceSuffixParam):
 			opts.TrimServiceSuffix = param[len(trimServiceSuffixParam):]
+		case strings.HasPrefix(param, renameServiceParam):
+			opts.RenameService = strings.Split(param[len(renameServiceParam):], ";")
 		case strings.HasPrefix(param, versionParam):
 			opts.Version = param[len(versionParam):]
 		case param == "global-header":

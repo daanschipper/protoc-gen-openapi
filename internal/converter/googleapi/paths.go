@@ -84,6 +84,12 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 		serviceName = strings.TrimSuffix(serviceName, opts.TrimServiceSuffix)
 	}
 
+	if len(opts.RenameService) != 0 {
+		if serviceName == opts.RenameService[0] {
+			serviceName = opts.RenameService[1]
+		}
+	}
+
 	operationId := string(md.FullName())
 	if opts.WithoutFqn {
 		operationId = fmt.Sprintf("%s.%s", serviceName, md.Name())
