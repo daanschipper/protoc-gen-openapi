@@ -1,0 +1,101 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "merge_examples_foobar",
+    "description": "## merge_examples_foobar.Foo\n\nDescription for Foo"
+  },
+  "paths": {
+    "/merge_examples_foobar.Foo/FooBar": {
+      "post": {
+        "tags": [
+          "merge_examples_foobar.Foo"
+        ],
+        "summary": "FooBar",
+        "description": "Description for FooBar",
+        "operationId": "merge_examples_foobar.Foo.FooBar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/merge_examples_foobar.BarRequest"
+              },
+              "examples": {
+                "test": {
+                  "summary": "example test foo",
+                  "value": "test"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/merge_examples_foobar.BarReply"
+                },
+                "examples": {
+                  "test": {
+                    "summary": "example test bar",
+                    "value": "test"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "merge_examples_foobar.BarReply": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Title for BarReply.message",
+            "description": "Description for BarReply.message"
+          }
+        },
+        "title": "Title for BarRequest",
+        "additionalProperties": false,
+        "description": "Description for BarRequest"
+      },
+      "merge_examples_foobar.BarRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/merge_examples_foobar.Name"
+          }
+        },
+        "title": "Title for BarRequest",
+        "additionalProperties": false,
+        "description": "Description for BarRequest"
+      },
+      "merge_examples_foobar.Name": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Title for Name.name",
+            "description": "Description for Name.name"
+          }
+        },
+        "title": "Title for Name",
+        "additionalProperties": false,
+        "description": "Description for Name"
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "merge_examples_foobar.Foo",
+      "description": "Description for Foo"
+    }
+  ]
+}

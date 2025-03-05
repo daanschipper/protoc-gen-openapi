@@ -28,6 +28,7 @@ import (
 var scenarios = []Scenario{
 	{Name: "standard", Options: "allow-get,with-streaming,with-service-descriptions"},
 	{Name: "direct_proto_message", Options: "allow-get,with-streaming,with-service-descriptions,trim-connect-rpc,direct-proto-message"},
+	{Name: "merge_examples", Options: "allow-get,with-streaming,with-service-descriptions,trim-connect-rpc,direct-proto-message,merge-examples"},
 	{Name: "proto_names", Options: "with-proto-names"},
 	{Name: "path_prefix", Options: "path-prefix=/testing/1234"},
 	{Name: "with_proto_annotations", Options: "with-proto-annotations"},

@@ -67,6 +67,8 @@ type Options struct {
 	TrimOneUseResponseType bool
 	// Custom default error
 	CustomDefaultError bool
+	// Merge
+	MergeExamples bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -146,6 +148,8 @@ func FromString(s string) (Options, error) {
 			opts.TrimOneUseResponseType = true
 		case param == "custom-default-error":
 			opts.CustomDefaultError = true
+		case param == "merge-examples":
+			opts.MergeExamples = true
 		case strings.HasPrefix(param, trimMessageSuffixParam):
 			opts.TrimMessageSuffix = param[len(trimMessageSuffixParam):]
 		case strings.HasPrefix(param, trimServiceSuffixParam):
