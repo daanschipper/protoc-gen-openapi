@@ -20,9 +20,33 @@
                 "$ref": "#/components/schemas/merge_examples_foobar.BarRequest"
               },
               "examples": {
-                "test": {
-                  "summary": "example test foo",
+                "test yaml": {
+                  "summary": "example test yaml",
                   "value": "test"
+                },
+                "test yaml multiline": {
+                  "summary": "example test yaml multiline",
+                  "value": {
+                    "test": {
+                      "foo": "bar"
+                    }
+                  }
+                },
+                "test value": {
+                  "summary": "example test value",
+                  "value": {
+                    "name": {
+                      "name": "example-name"
+                    }
+                  }
+                },
+                "test invalid value": {
+                  "summary": "example test invalid value",
+                  "value": {
+                    "name": {
+                      "nameinvalidfield": "example-name"
+                    }
+                  }
                 }
               }
             }

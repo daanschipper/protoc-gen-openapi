@@ -16,17 +16,57 @@ service Foo {
               name: "application/json"
               value: {
                 examples: {
-                  additional_properties:{
-                    name: "test yaml",
+                  additional_properties: {
+                    name: "test yaml"
                     value: {
                       example: {
-                        summary: "example test foo",
+                        summary: "example test yaml"
                         value: {
                           yaml: "test"
                         }
                       }
                     }
-                  },
+                  }
+                  additional_properties: {
+                    name: "test yaml multiline"
+                    value: {
+                      example: {
+                        summary: "example test yaml multiline"
+                        value: {
+                          yaml: "test:\n"
+                          "  foo: bar"
+                        }
+                      }
+                    }
+                  }
+                  additional_properties: {
+                    name: "test value",
+                    value: {
+                      example: {
+                        summary: "example test value",
+                        value: {
+                          value: {
+                            type_url: "merge_examples_foobar/BarRequest"
+                            value: "{\"name\":{\"name\":\"example-name\"}}"
+                          }
+                        }
+                      }
+                    }
+                  }
+                  additional_properties: {
+                    name: "test invalid value",
+                    value: {
+                      example: {
+                        summary: "example test invalid value",
+                        value: {
+                          value: {
+                            type_url: "merge_examples_foobar/BarRequest"
+                            value: "{\"name\":{\"nameinvalidfield\":\"example-name\"}}"
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -35,7 +75,7 @@ service Foo {
       }
       responses: {
         response_or_reference: {
-          name: "200",
+          name: "200"
           value: {
             response: {
               content: {
@@ -43,11 +83,11 @@ service Foo {
                   name: "application/json"
                   value: {
                     examples: {
-                      additional_properties:{
-                        name: "test",
+                      additional_properties: {
+                        name: "test"
                         value: {
                           example: {
-                            summary: "example test bar",
+                            summary: "example test bar"
                             value: {
                               yaml: "test"
                             }

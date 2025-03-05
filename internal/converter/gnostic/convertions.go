@@ -1,6 +1,9 @@
 package gnostic
 
 import (
+	"encoding/json"
+	"github.com/google/gnostic/compiler"
+	"google.golang.org/protobuf/types/known/anypb"
 	"strconv"
 
 	goa3 "github.com/google/gnostic/openapiv3"
@@ -347,12 +350,67 @@ func toExamples(exes *goa3.ExamplesOrReferences) *orderedmap.Map[string, *base.E
 		examples.Set(item.Name, &base.Example{
 			Summary:       example.Summary,
 			Description:   example.Description,
-			Value:         example.Value.ToRawInfo(),
+			Value:         ToRawInfo(example.Value),
 			ExternalValue: example.ExternalValue,
 			Extensions:    toExtensions(example.SpecificationExtension),
 		})
 	}
 	return examples
+}
+
+func ToRawInfo(any *goa3.Any) *yaml.Node {
+	// If yaml field is provided, use the original implementation
+	if any.Yaml != "" {
+		var err error
+		var node yaml.Node
+		err = yaml.Unmarshal([]byte(any.Yaml), &node)
+		if err == nil {
+			if node.Kind == yaml.DocumentNode {
+				return node.Content[0]
+			}
+			return &node
+		}
+		return compiler.NewNullNode()
+	}
+
+	// If value field is provided, try to convert it to YAML
+	if any.Value != nil {
+		return valueToRawInfo(any.Value)
+	}
+
+	// If neither yaml nor value is provided, return a null node
+	return compiler.NewNullNode()
+}
+
+func valueToRawInfo(value *anypb.Any) *yaml.Node {
+	// Try to unmarshal the value as JSON
+	var jsonObj interface{}
+	err := json.Unmarshal(value.Value, &jsonObj)
+	if err != nil {
+		// If the value is not valid JSON, return a null node
+		return compiler.NewNullNode()
+	}
+
+	// todo validation whether the value is serializable to the type_url
+
+	// Convert the JSON object to YAML
+	yamlBytes, err := yaml.Marshal(jsonObj)
+	if err != nil {
+		return compiler.NewNullNode()
+	}
+
+	// Unmarshal the YAML bytes into a YAML node
+	var node yaml.Node
+	err = yaml.Unmarshal(yamlBytes, &node)
+	if err != nil {
+		return compiler.NewNullNode()
+	}
+
+	// Return the node or the content if it's a document node
+	if node.Kind == yaml.DocumentNode {
+		return node.Content[0]
+	}
+	return &node
 }
 
 func toMediaTypes(items *goa3.MediaTypes) *orderedmap.Map[string, *v3.MediaType] {
