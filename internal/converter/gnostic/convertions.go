@@ -6,14 +6,14 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"strconv"
 
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/options"
+	"github.com/daanschipper/protoc-gen-openapi/internal/converter/util"
 	goa3 "github.com/google/gnostic/openapiv3"
 	base "github.com/pb33f/libopenapi/datamodel/high/base"
 	highv3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/pb33f/libopenapi/utils"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
 	"gopkg.in/yaml.v3"
 )
 
