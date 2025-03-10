@@ -38,7 +38,7 @@ var scenarios = []Scenario{
 	{Name: "trim_service_suffix", Options: "trim-connect-rpc,trim-service-suffix=SuffixToTrim,without-fqn"},
 	{Name: "trim_enum_name_prefix", Options: "trim-connect-rpc,trim-enum-name-prefix"},
 	{Name: "explicit_optional_fields", Options: "explicit-optional-fields,allow-get,with-streaming,with-service-descriptions,trim-connect-rpc"},
-	{Name: "filter_public", Options: "explicit-optional-fields,allow-get,with-streaming,with-service-descriptions,trim-connect-rpc,filter-public"},
+	{Name: "filter_public", Options: "explicit-optional-fields,allow-get,with-streaming,with-service-descriptions,trim-connect-rpc,filter-public,filter-private"},
 	{Name: "with_base", Options: "base=testdata/with_base/base.yaml,trim-unused-types"},
 	{Name: "with_global_header", Options: "global-header,trim-unused-types,trim-connect-rpc,version=1.1.2"},
 	{Name: "with_specification_extensions", Options: "base=testdata/with_specification_extensions/base.yaml,trim-unused-types"},

@@ -2,14 +2,17 @@ package schema
 
 import (
 	"fmt"
-    "log/slog"
-    "slices"
+	oasExtension "github.com/sudorandom/protoc-gen-connect-openapi/openapi"
+	"google.golang.org/protobuf/proto"
+	"log/slog"
+	"slices"
 
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	//"google.golang.org/protobuf/proto"
 )
 
 func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (string, *base.Schema) {
@@ -40,6 +43,20 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 	fields := tt.Fields()
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
+
+		// skip private fields
+		if opts.FilterPrivate {
+			extension := proto.GetExtension(field.Options(), oasExtension.E_FieldParams)
+			if extension != nil {
+				if extension != oasExtension.E_FieldParams.InterfaceOf(oasExtension.E_FieldParams.Zero()) {
+					private := extension.(*oasExtension.OpenApiFilterPrivate)
+					if private.GetPrivate() {
+						continue
+					}
+				}
+			}
+		}
+
 		if oneOf := field.ContainingOneof(); oneOf != nil && !oneOf.IsSynthetic() {
 			oneOneGroups[oneOf.FullName()] = append(oneOneGroups[oneOf.FullName()], util.MakeFieldName(opts, field))
 		}

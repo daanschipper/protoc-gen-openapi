@@ -48,6 +48,7 @@ type Options struct {
 	// No oneOf for optional fields
 	ExplicitOptionalFields bool
 	FilterPublic           bool
+	FilterPrivate          bool
 	DirectProtoMessage     bool
 	// Strip suffix from message
 	TrimMessageSuffix string
@@ -140,6 +141,8 @@ func FromString(s string) (Options, error) {
 			opts.IgnoreGoogleapiHTTP = true
 		case param == "filter-public":
 			opts.FilterPublic = true
+		case param == "filter-private":
+			opts.FilterPrivate = true
 		case param == "trim-enum-name-prefix":
 			opts.TrimEnumNamePrefix = true
 		case param == "without-fqn":

@@ -10,6 +10,14 @@ message OpenApiOptions {
   optional bool public = 1;
 }
 
+message OpenApiFilterPrivate {
+  optional bool private = 1;
+}
+
 extend google.protobuf.MethodOptions {
   OpenApiOptions method_params = 2506;
+}
+
+extend google.protobuf.FieldOptions {
+  OpenApiFilterPrivate field_params = 2506;
 }

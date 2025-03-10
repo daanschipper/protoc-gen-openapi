@@ -33,11 +33,25 @@ service Greeter {
 // The request message containing the user's name.
 message HelloRequest {
   string name = 1;
+  string non_public_name = 2 [
+    (openapi.field_params) = {
+      private: true;
+    }
+  ];
 }
 
 // The response message containing the greetings
 message HelloReply {
-  string message = 1;
+  string message = 1 [
+    (openapi.field_params) = {
+      private: false;
+    }
+  ];
+  string non_public_name = 2 [
+    (openapi.field_params) = {
+      private: true;
+    }
+  ];
 }
 
 
