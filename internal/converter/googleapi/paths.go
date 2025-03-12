@@ -280,7 +280,7 @@ func httpRuleToPathMap(opts options.Options, spec *v3.Document, schemas map[stri
 			Name:        "X-Rootline-Version",
 			Required:    util.BoolPtr(true),
 			In:          "header",
-			Description: "The major version of the Rootline API.",
+			Description: "The version of the Rootline API.",
 			Schema: base.CreateSchemaProxy(&base.Schema{
 				Type:    []string{"string"},
 				Default: utils.CreateStringNode(opts.Version),

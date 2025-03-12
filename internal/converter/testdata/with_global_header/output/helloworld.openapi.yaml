@@ -52,7 +52,7 @@ paths:
       parameters:
         - name: X-Rootline-Version
           in: header
-          description: The major version of the Rootline API.
+          description: The version of the Rootline API.
           required: true
           schema:
             type: string
