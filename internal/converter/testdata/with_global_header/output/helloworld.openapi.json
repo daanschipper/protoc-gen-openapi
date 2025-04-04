@@ -78,7 +78,7 @@
         "operationId": "helloworld_with_global_header.Greeter.HelloWithGoogleAnnotation",
         "parameters": [
           {
-            "name": "X-Rootline-Version",
+            "name": "Rootline-Version",
             "in": "header",
             "description": "The version of the Rootline API.",
             "required": true,
