@@ -46,6 +46,7 @@ var scenarios = []Scenario{
 	{Name: "with_version", Options: "allow-get,with-streaming,with-service-descriptions,version=1.1.1"},
 	{Name: "without_fqn", Options: "trim-connect-rpc,without-fqn"},
 	{Name: "trim_unused_type_filter_public", Options: "trim-connect-rpc,trim-unused-types,filter-public"},
+	{Name: "trim_unused_type_filter_private", Options: "trim-connect-rpc,trim-unused-types,filter-private"},
 }
 
 type Scenario struct {

@@ -115,7 +115,22 @@ func (st *State) CollectMessage(referral string, tt protoreflect.MessageDescript
 	// Messages can have fields
 	fields := tt.Fields()
 	for i := 0; i < fields.Len(); i++ {
-		st.CollectField(fields.Get(i))
+		field := fields.Get(i)
+
+		// Skip collecting types referenced only by private fields
+		if st.Opts.FilterPrivate {
+			extension := proto.GetExtension(field.Options(), oasExtension.E_FieldParams)
+			if extension != nil {
+				if extension != oasExtension.E_FieldParams.InterfaceOf(oasExtension.E_FieldParams.Zero()) {
+					private := extension.(*oasExtension.OpenApiFilterPrivate)
+					if private.GetPrivate() {
+						continue
+					}
+				}
+			}
+		}
+
+		st.CollectField(field)
 	}
 
 	// Messages can have enums

@@ -1,0 +1,57 @@
+openapi: 3.1.0
+info:
+  title: filter_private_message_types
+paths:
+  /filter_private_message_types.Greeter/SayHello:
+    post:
+      tags:
+        - filter_private_message_types.Greeter
+      summary: SayHello
+      operationId: filter_private_message_types.Greeter.SayHello
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/filter_private_message_types.HelloRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/filter_private_message_types.HelloReply'
+components:
+  schemas:
+    filter_private_message_types.HelloReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+      title: HelloReply
+      additionalProperties: false
+    filter_private_message_types.HelloRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+        publicData:
+          allOf:
+            - $ref: '#/components/schemas/filter_private_message_types.PublicData'
+          title: public_data
+      title: HelloRequest
+      additionalProperties: false
+    filter_private_message_types.PublicData:
+      type: object
+      properties:
+        value:
+          type: string
+          title: value
+      title: PublicData
+      additionalProperties: false
+      description: A message type referenced by a public field — should appear in OpenAPI output.
+security: []
+tags:
+  - name: filter_private_message_types.Greeter
