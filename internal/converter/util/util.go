@@ -10,9 +10,75 @@ import (
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
+	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
+
+// FieldHasBoolExtension reports whether the field's options carry the extension
+// with the given field number set to boolean true. It resolves the extension
+// whether it was parsed as a known extension or preserved as an unknown field —
+// the latter being the common case for extensions not compiled into this plugin,
+// which is why the number, rather than a generated Go type, is the key.
+func FieldHasBoolExtension(field protoreflect.FieldDescriptor, number int32) bool {
+	options := field.Options()
+	if options == nil {
+		return false
+	}
+	message := options.ProtoReflect()
+
+	found := false
+	message.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
+		if int32(fd.Number()) == number && fd.Kind() == protoreflect.BoolKind && v.Bool() {
+			found = true
+			return false
+		}
+		return true
+	})
+	if found {
+		return true
+	}
+
+	// Not known to this plugin's registry: walk the raw unknown option bytes.
+	unknown := message.GetUnknown()
+	for len(unknown) > 0 {
+		num, kind, n := protowire.ConsumeTag(unknown)
+		if n < 0 {
+			return false
+		}
+		unknown = unknown[n:]
+		if int32(num) == number && kind == protowire.VarintType {
+			value, vn := protowire.ConsumeVarint(unknown)
+			if vn < 0 {
+				return false
+			}
+			if value == 1 {
+				return true
+			}
+			unknown = unknown[vn:]
+			continue
+		}
+		vn := protowire.ConsumeFieldValue(num, kind, unknown)
+		if vn < 0 {
+			return false
+		}
+		unknown = unknown[vn:]
+	}
+	return false
+}
+
+// MessageHasFieldExtension reports whether any field of the message carries the
+// given bool extension set to true. It decides whether a message opts in to
+// allowlist filtering driven by FilterRequiredFieldExtension.
+func MessageHasFieldExtension(message protoreflect.MessageDescriptor, number int32) bool {
+	fields := message.Fields()
+	for i := 0; i < fields.Len(); i++ {
+		if FieldHasBoolExtension(fields.Get(i), number) {
+			return true
+		}
+	}
+	return false
+}
 
 func AppendComponents(spec *v3.Document, components *v3.Components) {
 	for pair := components.Schemas.First(); pair != nil; pair = pair.Next() {

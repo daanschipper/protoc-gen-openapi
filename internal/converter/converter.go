@@ -168,6 +168,11 @@ func ConvertWithOptions(req *pluginpb.CodeGeneratorRequest, opts options.Options
 	for path, spec := range outFiles {
 		path := path
 		spec := spec
+		if opts.TrimUnreferencedSchemas {
+			if err := trimUnreferencedSchemas(spec); err != nil {
+				return nil, err
+			}
+		}
 		content, err := specToFile(opts, spec)
 		if err != nil {
 			return nil, err
@@ -232,6 +237,112 @@ func specToFile(opts options.Options, spec *v3.Document) (string, error) {
 		return string(b), nil
 	default:
 		return "", fmt.Errorf("unknown format: %s", opts.Format)
+	}
+}
+
+// trimUnreferencedSchemas drops component schemas not reachable by $ref from the
+// document's paths. It renders and re-parses the spec to harvest refs generically
+// rather than walking the typed model, then keeps only schemas reachable from
+// non-schema roots, transitively through schema-to-schema references. Unlike
+// TrimUnusedTypes, this sees the rendered output, so it also removes request
+// messages whose fields are all consumed as path/query parameters (no body ref).
+func trimUnreferencedSchemas(spec *v3.Document) error {
+	if spec.Components == nil || spec.Components.Schemas == nil || spec.Components.Schemas.Len() == 0 {
+		return nil
+	}
+
+	raw := spec.RenderWithIndention(2)
+	var root map[string]any
+	if err := yaml.Unmarshal(raw, &root); err != nil {
+		return fmt.Errorf("trim-unreferenced-schemas: %w", err)
+	}
+
+	const prefix = "#/components/schemas/"
+	schemaDefs := schemasNode(root)
+
+	reachable := map[string]struct{}{}
+	queue := []string{}
+	enqueue := func(refs map[string]struct{}) {
+		for name := range refs {
+			if _, seen := reachable[name]; !seen {
+				reachable[name] = struct{}{}
+				queue = append(queue, name)
+			}
+		}
+	}
+
+	// Roots: refs anywhere except the schema definitions themselves (paths plus any
+	// non-schema component sections). Schema-to-schema edges are followed below.
+	roots := map[string]struct{}{}
+	for key, value := range root {
+		if key == "components" {
+			components, ok := value.(map[string]any)
+			if !ok {
+				continue
+			}
+			for section, sectionValue := range components {
+				if section == "schemas" {
+					continue
+				}
+				collectSchemaRefs(sectionValue, prefix, roots)
+			}
+			continue
+		}
+		collectSchemaRefs(value, prefix, roots)
+	}
+	enqueue(roots)
+
+	for len(queue) > 0 {
+		name := queue[0]
+		queue = queue[1:]
+		def, ok := schemaDefs[name]
+		if !ok {
+			continue
+		}
+		refs := map[string]struct{}{}
+		collectSchemaRefs(def, prefix, refs)
+		enqueue(refs)
+	}
+
+	// Rebuild preserving declaration order, keeping only reachable schemas.
+	kept := orderedmap.New[string, *base.SchemaProxy]()
+	for pair := spec.Components.Schemas.First(); pair != nil; pair = pair.Next() {
+		if _, ok := reachable[pair.Key()]; ok {
+			kept.Set(pair.Key(), pair.Value())
+		}
+	}
+	spec.Components.Schemas = kept
+	return nil
+}
+
+func schemasNode(root map[string]any) map[string]any {
+	components, ok := root["components"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	schemas, ok := components["schemas"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	return schemas
+}
+
+func collectSchemaRefs(node any, prefix string, out map[string]struct{}) {
+	switch value := node.(type) {
+	case map[string]any:
+		for key, child := range value {
+			if key == "$ref" {
+				if ref, ok := child.(string); ok && strings.HasPrefix(ref, prefix) {
+					out[strings.TrimPrefix(ref, prefix)] = struct{}{}
+				}
+				continue
+			}
+			collectSchemaRefs(child, prefix, out)
+		}
+	case []any:
+		for _, child := range value {
+			collectSchemaRefs(child, prefix, out)
+		}
 	}
 }
 

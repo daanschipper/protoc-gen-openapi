@@ -47,6 +47,8 @@ var scenarios = []Scenario{
 	{Name: "without_fqn", Options: "trim-connect-rpc,without-fqn"},
 	{Name: "trim_unused_type_filter_public", Options: "trim-connect-rpc,trim-unused-types,filter-public"},
 	{Name: "trim_unused_type_filter_private", Options: "trim-connect-rpc,trim-unused-types,filter-private"},
+	{Name: "filter_required_field_extension", Options: "trim-connect-rpc,trim-unused-types,filter-required-field-extension=50002"},
+	{Name: "trim_unreferenced_schemas", Options: "trim-connect-rpc,trim-unused-types,trim-unreferenced-schemas"},
 }
 
 type Scenario struct {

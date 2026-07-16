@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -49,7 +50,25 @@ type Options struct {
 	ExplicitOptionalFields bool
 	FilterPublic           bool
 	FilterPrivate          bool
-	DirectProtoMessage     bool
+	// FilterRequiredFieldExtension, when non-zero, is a custom field-options
+	// extension number that drives allowlist filtering. A message opts in when at
+	// least one of its fields carries the extension set to true; opted-in messages
+	// keep only those fields. Messages with no such field are left untouched, so
+	// this coexists with un-annotated protos in the same generation pass.
+	FilterRequiredFieldExtension int32
+	// FilterRequiredFieldExtensionStrict applies the allowlist to every message
+	// rather than only those that declare the extension: a message with no
+	// annotated field becomes an empty object. Use it when the whole generation is
+	// annotated (a single API), so nothing leaks through un-annotated. Without it,
+	// un-annotated messages pass through intact (for mixing annotated protos with
+	// un-annotated ones in one pass).
+	FilterRequiredFieldExtensionStrict bool
+	// TrimUnreferencedSchemas removes component schemas not reachable by $ref from
+	// the paths. Unlike TrimUnusedTypes (which prunes the proto-collection graph),
+	// this prunes the rendered document, so it also drops request messages whose
+	// fields are all consumed as path/query parameters (no body $ref).
+	TrimUnreferencedSchemas bool
+	DirectProtoMessage      bool
 	// Strip suffix from message
 	TrimMessageSuffix string
 	// Strip suffix from service
@@ -108,6 +127,7 @@ func FromString(s string) (Options, error) {
 	trimServiceSuffixParam := "trim-service-suffix="
 	renameServiceParam := "rename-service="
 	versionParam := "version="
+	requiredFieldExtParam := "filter-required-field-extension="
 
 	contentTypes := map[string]struct{}{}
 	for _, param := range strings.Split(s, ",") {
@@ -143,6 +163,17 @@ func FromString(s string) (Options, error) {
 			opts.FilterPublic = true
 		case param == "filter-private":
 			opts.FilterPrivate = true
+		case strings.HasPrefix(param, requiredFieldExtParam):
+			raw := param[len(requiredFieldExtParam):]
+			num, err := strconv.Atoi(raw)
+			if err != nil || num <= 0 {
+				return opts, fmt.Errorf("filter-required-field-extension must be a positive integer, got '%s'", raw)
+			}
+			opts.FilterRequiredFieldExtension = int32(num)
+		case param == "filter-required-field-extension-strict":
+			opts.FilterRequiredFieldExtensionStrict = true
+		case param == "trim-unreferenced-schemas":
+			opts.TrimUnreferencedSchemas = true
 		case param == "trim-enum-name-prefix":
 			opts.TrimEnumNamePrefix = true
 		case param == "without-fqn":

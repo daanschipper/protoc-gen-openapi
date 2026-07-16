@@ -112,6 +112,13 @@ func (st *State) CollectMessage(referral string, tt protoreflect.MessageDescript
 		referral: {},
 	}
 
+	// A message opts in to allowlist filtering when any of its fields carries the
+	// required extension; drop the rest so types reachable only through filtered
+	// fields are trimmed alongside them. Strict mode filters every message.
+	allowlist := st.Opts.FilterRequiredFieldExtension != 0 &&
+		(st.Opts.FilterRequiredFieldExtensionStrict ||
+			util.MessageHasFieldExtension(tt, st.Opts.FilterRequiredFieldExtension))
+
 	// Messages can have fields
 	fields := tt.Fields()
 	for i := 0; i < fields.Len(); i++ {
@@ -128,6 +135,10 @@ func (st *State) CollectMessage(referral string, tt protoreflect.MessageDescript
 					}
 				}
 			}
+		}
+
+		if allowlist && !util.FieldHasBoolExtension(field, st.Opts.FilterRequiredFieldExtension) {
+			continue
 		}
 
 		st.CollectField(field)

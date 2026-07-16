@@ -39,6 +39,13 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 
 	oneOneGroups := map[protoreflect.FullName][]string{}
 
+	// A message opts in to allowlist filtering when any of its fields carries the
+	// required extension; opted-in messages then keep only those fields. Strict
+	// mode filters every message regardless, so nothing leaks through un-annotated.
+	allowlist := opts.FilterRequiredFieldExtension != 0 &&
+		(opts.FilterRequiredFieldExtensionStrict ||
+			util.MessageHasFieldExtension(tt, opts.FilterRequiredFieldExtension))
+
 	props := orderedmap.New[string, *base.SchemaProxy]()
 	fields := tt.Fields()
 	for i := 0; i < fields.Len(); i++ {
@@ -55,6 +62,10 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 					}
 				}
 			}
+		}
+
+		if allowlist && !util.FieldHasBoolExtension(field, opts.FilterRequiredFieldExtension) {
+			continue
 		}
 
 		if oneOf := field.ContainingOneof(); oneOf != nil && !oneOf.IsSynthetic() {
