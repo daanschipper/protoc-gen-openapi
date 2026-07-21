@@ -25,12 +25,8 @@ func fileToTags(opts options.Options, fd protoreflect.FileDescriptor) []*base.Ta
 		loc := fd.SourceLocations().ByDescriptor(service)
 		description := util.FormatComments(loc)
 
-		tagName := string(service.FullName())
-		if opts.ShortServiceTags {
-			tagName = string(service.Name())
-		}
 		tags = append(tags, &base.Tag{
-			Name:        tagName,
+			Name:        util.ServiceTagName(opts, service),
 			Description: description,
 		})
 	}

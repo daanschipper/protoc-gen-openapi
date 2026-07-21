@@ -12,9 +12,34 @@ import (
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/visibility"
+	oasExtension "github.com/sudorandom/protoc-gen-connect-openapi/openapi"
 	"go.yaml.in/yaml/v4"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
+
+// FieldFilteredOut reports whether a field should be dropped from schema output
+// under the fork's filter-private / required-field-extension allowlist options.
+func FieldFilteredOut(opts options.Options, message protoreflect.MessageDescriptor, field protoreflect.FieldDescriptor) bool {
+	if opts.FilterPrivate {
+		extension := proto.GetExtension(field.Options(), oasExtension.E_FieldParams)
+		if extension != nil && extension != oasExtension.E_FieldParams.InterfaceOf(oasExtension.E_FieldParams.Zero()) {
+			if private, ok := extension.(*oasExtension.OpenApiFilterPrivate); ok && private.GetPrivate() {
+				return true
+			}
+		}
+	}
+	// A message opts in to allowlist filtering when any of its fields carries the
+	// required extension; opted-in messages then keep only those fields. Strict
+	// mode filters every message regardless.
+	allowlist := opts.FilterRequiredFieldExtension != 0 &&
+		(opts.FilterRequiredFieldExtensionStrict ||
+			util.MessageHasFieldExtension(message, opts.FilterRequiredFieldExtension))
+	if allowlist && !util.FieldHasBoolExtension(field, opts.FilterRequiredFieldExtension) {
+		return true
+	}
+	return false
+}
 
 func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (string, *base.Schema) {
 	if opts.Debug {
@@ -32,6 +57,7 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 	if opts.FullyQualifiedMessageNames {
 		title = string(tt.FullName())
 	}
+	title = util.TrimMessageSuffix(opts, title)
 	s := &base.Schema{
 		Title:                title,
 		Description:          util.FormatComments(tt.ParentFile().SourceLocations().ByDescriptor(tt)),
@@ -49,12 +75,15 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 			opts.Logger.Debug("Filtering field due to visibility", slog.String("field", string(field.FullName())), slog.Any("restriction_selectors", opts.AllowedVisibilities))
 			continue
 		}
+		if FieldFilteredOut(opts, tt, field) {
+			continue
+		}
 		if oneOf := field.ContainingOneof(); oneOf != nil && !oneOf.IsSynthetic() {
 			oneOneGroups[oneOf.FullName()] = append(oneOneGroups[oneOf.FullName()], field)
 			continue
 		}
 		prop := FieldToSchema(opts, base.CreateSchemaProxy(s), field)
-		if field.HasOptionalKeyword() {
+		if field.HasOptionalKeyword() && !opts.ExplicitOptionalFields {
 			schema := prop.Schema()
 			if schema == nil {
 				continue
@@ -105,7 +134,7 @@ func MessageToSchema(opts options.Options, tt protoreflect.MessageDescriptor) (s
 
 	// Apply Updates from Options
 	s = opts.MessageAnnotator.AnnotateMessage(opts, s, tt)
-	return string(tt.FullName()), s
+	return util.DescriptorToId(opts, tt), s
 }
 
 func FieldToSchema(opts options.Options, parent *base.SchemaProxy, tt protoreflect.FieldDescriptor) *base.SchemaProxy {
@@ -115,11 +144,16 @@ func FieldToSchema(opts options.Options, parent *base.SchemaProxy, tt protorefle
 	}
 
 	if tt.IsMap() {
-		// Handle maps
-		root := ScalarFieldToSchema(opts, parent, tt, false)
-		root.Title = string(tt.Name())
-		root.Type = []string{"object"}
-		root.Description = util.TypeFieldDescription(opts, tt)
+		// Handle maps. Build the base schema directly and annotate exactly once:
+		// going through ScalarFieldToSchema would run the field annotator a second
+		// time and duplicate appended fields such as examples.
+		root := &base.Schema{
+			ParentProxy: parent,
+			Deprecated:  util.IsFieldDeprecated(tt),
+			Title:       string(tt.Name()),
+			Type:        []string{"object"},
+			Description: util.TypeFieldDescription(opts, tt),
+		}
 		root.AdditionalProperties = &base.DynamicValue[*base.SchemaProxy, bool]{A: FieldToSchema(opts, parent, tt.MapValue())}
 		root = opts.FieldAnnotator.AnnotateField(opts, root, tt, false)
 		return base.CreateSchemaProxy(root)
@@ -146,6 +180,16 @@ func FieldToSchema(opts options.Options, parent *base.SchemaProxy, tt protorefle
 	} else {
 		switch tt.Kind() {
 		case protoreflect.MessageKind, protoreflect.EnumKind:
+			// Fork rendering: reference wrapped in allOf (no oneOf/null for
+			// optionals), with an optional direct-$ref shortcut for messages.
+			if opts.ExplicitOptionalFields || opts.DirectProtoMessage {
+				if opts.DirectProtoMessage && tt.Kind() == protoreflect.MessageKind {
+					return ReferenceFieldToSchema(opts, parent, tt)
+				}
+				msg := ScalarFieldToSchema(opts, parent, tt, false)
+				msg.AllOf = append(msg.AllOf, ReferenceFieldToSchema(opts, parent, tt))
+				return base.CreateSchemaProxy(msg)
+			}
 			msg := ScalarFieldToSchema(opts, parent, tt, false)
 			ref := ReferenceFieldToSchema(opts, parent, tt)
 			if tt.HasOptionalKeyword() {
@@ -213,10 +257,10 @@ func ReferenceFieldToSchema(opts options.Options, parent *base.SchemaProxy, tt p
 	switch tt.Kind() {
 	case protoreflect.MessageKind:
 		opts.FieldReferenceAnnotator.AnnotateFieldReference(opts, parent.Schema(), tt)
-		return base.CreateSchemaProxyRef("#/components/schemas/" + string(tt.Message().FullName()))
+		return base.CreateSchemaProxyRef("#/components/schemas/" + util.DescriptorToId(opts, tt.Message()))
 	case protoreflect.EnumKind:
 		opts.FieldReferenceAnnotator.AnnotateFieldReference(opts, parent.Schema(), tt)
-		return base.CreateSchemaProxyRef("#/components/schemas/" + string(tt.Enum().FullName()))
+		return base.CreateSchemaProxyRef("#/components/schemas/" + util.DescriptorToId(opts, tt.Enum()))
 	default:
 		panic(fmt.Errorf("ReferenceFieldToSchema called with unknown kind: %T", tt.Kind()))
 	}
@@ -242,6 +286,22 @@ func makeOneOfGroup(opts options.Options, fields []protoreflect.FieldDescriptor)
 		schema.Required = []string{fieldName}
 
 		rootSchemas = append(rootSchemas, base.CreateSchemaProxy(schema))
+	}
+
+	// A proto oneof is "at most one" (0 or 1 set), so add a branch that matches
+	// when none of the members are present. This makes the oneOf optional instead
+	// of requiring exactly one. Gated on OptionalOneof; upstream renders proto
+	// oneofs as exactly-one.
+	if opts.OptionalOneof {
+		noneAnyOf := make([]*base.SchemaProxy, 0, len(fields))
+		for _, field := range fields {
+			noneAnyOf = append(noneAnyOf, base.CreateSchemaProxy(&base.Schema{
+				Required: []string{util.MakeFieldName(opts, field)},
+			}))
+		}
+		rootSchemas = append(rootSchemas, base.CreateSchemaProxy(&base.Schema{
+			Not: base.CreateSchemaProxy(&base.Schema{AnyOf: noneAnyOf}),
+		}))
 	}
 
 	return base.CreateSchemaProxy(&base.Schema{OneOf: rootSchemas})
