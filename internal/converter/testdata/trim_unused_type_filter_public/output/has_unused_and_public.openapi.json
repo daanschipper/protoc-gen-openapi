@@ -1,0 +1,91 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "has_unused_types_filter_public"
+  },
+  "paths": {
+    "/has_unused_types_filter_public.FlexService/NormalRPC2": {
+      "post": {
+        "tags": [
+          "has_unused_types_filter_public.FlexService"
+        ],
+        "summary": "NormalRPC2",
+        "operationId": "has_unused_types_filter_public.FlexService.NormalRPC2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/has_unused_types_filter_public.UsedRequest2"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/has_unused_types_filter_public.UsedReply2"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "has_unused_types_filter_public.UsedReply2": {
+        "type": "object",
+        "properties": {
+          "msg": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/has_unused_types_filter_public.UsedType2"
+              }
+            ],
+            "title": "msg"
+          }
+        },
+        "title": "UsedReply2",
+        "additionalProperties": false
+      },
+      "has_unused_types_filter_public.UsedRequest2": {
+        "type": "object",
+        "properties": {
+          "msg": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/has_unused_types_filter_public.UsedType2"
+              }
+            ],
+            "title": "msg"
+          }
+        },
+        "title": "UsedRequest2",
+        "additionalProperties": false
+      },
+      "has_unused_types_filter_public.UsedType2": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "title": "description"
+          }
+        },
+        "title": "UsedType2",
+        "additionalProperties": false
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "has_unused_types_filter_public.FlexService",
+      "description": "This service tries to flex the different options"
+    }
+  ]
+}

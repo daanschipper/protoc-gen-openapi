@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package googleapi_path_underscores;
+
+import "google/api/annotations.proto";
+
+service Service {
+  rpc Method(Request) returns (Response) {
+    option (google.api.http) = {
+      post: "/v1/pathbefore/{id_with_under_scores}/pathafter"
+      body: "*"
+    };
+  };
+  // All non-oneof fields are bound to path parameters: the emptied allOf
+  // properties entry is dropped, leaving only the oneOf constraint.
+  rpc Update(UpdateRequest) returns (Response) {
+    option (google.api.http) = {
+      patch: "/v1/pathbefore/{id_with_under_scores}/pathafter"
+      body: "*"
+    };
+  };
+  // All request fields are bound to path parameters, so no requestBody at all.
+  rpc Delete(DeleteRequest) returns (Response) {
+    option (google.api.http) = {
+      delete: "/v1/pathbefore/{id_with_under_scores}/pathafter/{name}"
+      body: "*"
+    };
+  };
+}
+
+message Request {
+  string id_with_under_scores = 1;
+  string reference = 2;
+}
+
+message DeleteRequest {
+  string id_with_under_scores = 1;
+  string name = 2;
+}
+
+message UpdateRequest {
+  string id_with_under_scores = 1;
+  oneof settings {
+    string a_setting = 2;
+    string b_setting = 3;
+  }
+}
+
+message Response {
+  string message = 1;
+}

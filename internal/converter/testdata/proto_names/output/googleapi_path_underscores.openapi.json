@@ -1,0 +1,271 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "googleapi_path_underscores"
+  },
+  "paths": {
+    "/v1/pathbefore/{id_with_under_scores}/pathafter": {
+      "post": {
+        "tags": [
+          "googleapi_path_underscores.Service"
+        ],
+        "summary": "Method",
+        "operationId": "googleapi_path_underscores.Service.Method",
+        "parameters": [
+          {
+            "name": "id_with_under_scores",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id_with_under_scores"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "title": "reference"
+                  }
+                },
+                "title": "Request",
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/googleapi_path_underscores.Response"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "googleapi_path_underscores.Service"
+        ],
+        "summary": "Update",
+        "description": "All non-oneof fields are bound to path parameters: the emptied allOf\n properties entry is dropped, leaving only the oneOf constraint.",
+        "operationId": "googleapi_path_underscores.Service.Update",
+        "parameters": [
+          {
+            "name": "id_with_under_scores",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id_with_under_scores"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "allOf": [
+                  {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "a_setting": {
+                            "type": "string",
+                            "title": "a_setting"
+                          }
+                        },
+                        "title": "a_setting",
+                        "required": [
+                          "a_setting"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "b_setting": {
+                            "type": "string",
+                            "title": "b_setting"
+                          }
+                        },
+                        "title": "b_setting",
+                        "required": [
+                          "b_setting"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "title": "UpdateRequest",
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/googleapi_path_underscores.Response"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pathbefore/{id_with_under_scores}/pathafter/{name}": {
+      "delete": {
+        "tags": [
+          "googleapi_path_underscores.Service"
+        ],
+        "summary": "Delete",
+        "description": "All request fields are bound to path parameters, so no requestBody at all.",
+        "operationId": "googleapi_path_underscores.Service.Delete",
+        "parameters": [
+          {
+            "name": "id_with_under_scores",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id_with_under_scores"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/googleapi_path_underscores.Response"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "googleapi_path_underscores.DeleteRequest": {
+        "type": "object",
+        "properties": {
+          "id_with_under_scores": {
+            "type": "string",
+            "title": "id_with_under_scores"
+          },
+          "name": {
+            "type": "string",
+            "title": "name"
+          }
+        },
+        "title": "DeleteRequest",
+        "additionalProperties": false
+      },
+      "googleapi_path_underscores.Request": {
+        "type": "object",
+        "properties": {
+          "id_with_under_scores": {
+            "type": "string",
+            "title": "id_with_under_scores"
+          },
+          "reference": {
+            "type": "string",
+            "title": "reference"
+          }
+        },
+        "title": "Request",
+        "additionalProperties": false
+      },
+      "googleapi_path_underscores.Response": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "message"
+          }
+        },
+        "title": "Response",
+        "additionalProperties": false
+      },
+      "googleapi_path_underscores.UpdateRequest": {
+        "type": "object",
+        "allOf": [
+          {
+            "properties": {
+              "id_with_under_scores": {
+                "type": "string",
+                "title": "id_with_under_scores"
+              }
+            }
+          },
+          {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "a_setting": {
+                    "type": "string",
+                    "title": "a_setting"
+                  }
+                },
+                "title": "a_setting",
+                "required": [
+                  "a_setting"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "b_setting": {
+                    "type": "string",
+                    "title": "b_setting"
+                  }
+                },
+                "title": "b_setting",
+                "required": [
+                  "b_setting"
+                ]
+              }
+            ]
+          }
+        ],
+        "title": "UpdateRequest",
+        "additionalProperties": false
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "googleapi_path_underscores.Service"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package trim_message_suffix_foobar_enum_nested;
+
+service Foo {
+  rpc BarTrim(MessageSuffixToTrim) returns (MessageSuffixToTrim) {}
+  rpc BarNotTrim(NameSuffixToNotTrim) returns (NameSuffixToNotTrim) {}
+}
+
+message MessageSuffixToTrim {
+  string name = 1;
+  enum EnumMessageSuffixToTrim {
+    TRIM_VALUE_ONE = 0;
+    TRIM_VALUE_TWO = 1;
+  }
+}
+
+message NameSuffixToNotTrim {
+  string name = 1;
+  enum EnumMessageSuffixToNotTrim {
+    NOT_TRIM_VALUE_ONE = 0;
+    NOT_TRIM_VALUE_TWO = 1;
+  }
+}

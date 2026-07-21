@@ -1,0 +1,105 @@
+openapi: 3.1.0
+info:
+  title: helloworld_without_fqn
+paths:
+  /Greeter/SayHello:
+    post:
+      tags:
+        - Greeter
+      summary: SayHello
+      description: Sends a greeting
+      operationId: Greeter.SayHello
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HelloRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelloReply'
+  /Greeter/WriteHello:
+    post:
+      tags:
+        - Greeter
+      summary: WriteHello
+      description: Writes a greeting (has side effects)
+      operationId: Greeter.WriteHello
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HelloRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelloReply'
+  /v1/hellowithannotation:
+    post:
+      tags:
+        - Greeter
+      summary: HelloWithGoogleAnnotation
+      operationId: Greeter.HelloWithGoogleAnnotation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HelloWithGoogleAnnotationRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelloWithGoogleAnnotationReply'
+components:
+  schemas:
+    HelloReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+      title: HelloReply
+      additionalProperties: false
+      description: The response message containing the greetings
+    HelloRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+      title: HelloRequest
+      additionalProperties: false
+      description: The request message containing the user's name.
+    HelloWithGoogleAnnotationReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+      title: HelloWithGoogleAnnotationReply
+      additionalProperties: false
+      description: The response message containing the greetings
+    HelloWithGoogleAnnotationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+      title: HelloWithGoogleAnnotationRequest
+      additionalProperties: false
+      description: The request message containing the user's name.
+security: []
+tags:
+  - name: Greeter
+    description: The greeting service definition.
