@@ -1,0 +1,44 @@
+// Tests filter-required-field-extension=50002: a message opts in to allowlist
+// filtering when any of its fields carries the extension set to true, keeping
+// only those fields. Messages with no such field are left fully intact, so the
+// rule coexists with un-annotated messages in the same generation pass.
+syntax = "proto3";
+
+package filter_required_field_extension;
+
+import "google/protobuf/descriptor.proto";
+
+// Mirrors Rootline's api.common.options.v1.external (field 50002): a bare bool
+// field option marking a field as part of the external API surface.
+extend google.protobuf.FieldOptions {
+  bool external = 50002;
+}
+
+service Greeter {
+  rpc SayHello(HelloRequest) returns (HelloReply) {}
+}
+
+// Opted in (has external fields): only the external fields survive.
+message HelloRequest {
+  string name = 1 [(external) = true];
+  string internal_note = 2;                     // dropped: not external
+  InternalOnly internal_ref = 3;                // dropped: type must be trimmed
+  PublicDetail detail = 4 [(external) = true];  // kept
+}
+
+// Reachable only through a dropped field — trimmed under trim-unused-types.
+message InternalOnly {
+  string secret = 1;
+}
+
+// Reachable through an external field, and itself opted in.
+message PublicDetail {
+  string label = 1 [(external) = true];
+  string hidden = 2;  // dropped: not external
+}
+
+// Not opted in (no external fields): left fully intact.
+message HelloReply {
+  string message = 1;
+  string trace_id = 2;
+}

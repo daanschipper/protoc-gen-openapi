@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package optional_oneof;
+
+import "google/api/annotations.proto";
+
+service Service {
+  // Path-bound fields are removed from the flat properties while the oneof
+  // member and its at-most-one constraint stay.
+  rpc Update(UpdateRequest) returns (Response) {
+    option (google.api.http) = {
+      patch: "/v1/things/{thing_id}/settings/{setting_name}"
+      body: "*"
+    };
+  };
+}
+
+message UpdateRequest {
+  string thing_id = 1;
+  string setting_name = 2;
+  oneof settings {
+    ApplePaySettings applepay_settings = 3;
+  }
+}
+
+message ApplePaySettings {
+  string merchant_url = 1;
+}
+
+message MultiOneof {
+  string name = 1;
+  oneof choice {
+    string first_choice = 2;
+    string second_choice = 3;
+  }
+}
+
+message Response {
+  MultiOneof multi = 1;
+}

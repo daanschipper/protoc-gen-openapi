@@ -1,0 +1,102 @@
+openapi: 3.1.0
+info:
+  title: helloworld
+  description: |-
+    ## helloworld.OptionalGreeter
+
+    The greeting service definition.
+paths:
+  /helloworld.OptionalGreeter/SayHello:
+    get:
+      tags:
+        - helloworld.OptionalGreeter
+      summary: SayHello
+      description: Sends a greeting
+      operationId: helloworld.OptionalGreeter.SayHello.get
+      parameters:
+        - name: message
+          in: query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/helloworld.OptionalHelloRequest'
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/helloworld.OptionalHelloReply'
+    post:
+      tags:
+        - helloworld.OptionalGreeter
+      summary: SayHello
+      description: Sends a greeting
+      operationId: helloworld.OptionalGreeter.SayHello
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/helloworld.OptionalHelloRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/helloworld.OptionalHelloReply'
+  /helloworld.OptionalGreeter/WriteHello:
+    post:
+      tags:
+        - helloworld.OptionalGreeter
+      summary: WriteHello
+      description: Writes a greeting (has side effects)
+      operationId: helloworld.OptionalGreeter.WriteHello
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/helloworld.OptionalHelloRequest'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/helloworld.OptionalHelloReply'
+components:
+  schemas:
+    helloworld.OptionalHelloReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+        description:
+          type: string
+          title: description
+      title: OptionalHelloReply
+      required:
+        - name
+      additionalProperties: false
+      description: The response message containing the greetings
+    helloworld.OptionalHelloRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+        description:
+          type: string
+          title: description
+      title: OptionalHelloRequest
+      required:
+        - name
+      additionalProperties: false
+      description: The request message containing the user's name.
+security: []
+tags:
+  - name: helloworld.OptionalGreeter
+    description: The greeting service definition.

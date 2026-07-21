@@ -1,0 +1,119 @@
+openapi: 3.1.0
+info:
+  title: optional_oneof
+paths:
+  /v1/things/{thing_id}/settings/{setting_name}:
+    patch:
+      tags:
+        - optional_oneof.Service
+      summary: Update
+      description: |-
+        Path-bound fields are removed from the flat properties while the oneof
+         member and its at-most-one constraint stay.
+      operationId: optional_oneof.Service.Update
+      parameters:
+        - name: thing_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: thing_id
+        - name: setting_name
+          in: path
+          required: true
+          schema:
+            type: string
+            title: setting_name
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              anyOf:
+                - required:
+                    - applepay_settings
+                - not:
+                    anyOf:
+                      - required:
+                          - applepay_settings
+              properties:
+                applepay_settings:
+                  title: applepay_settings
+                  $ref: '#/components/schemas/optional_oneof.ApplePaySettings'
+              title: UpdateRequest
+              additionalProperties: false
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/optional_oneof.Response'
+components:
+  schemas:
+    optional_oneof.ApplePaySettings:
+      type: object
+      properties:
+        merchant_url:
+          type: string
+          title: merchant_url
+      title: ApplePaySettings
+      additionalProperties: false
+    optional_oneof.MultiOneof:
+      type: object
+      anyOf:
+        - required:
+            - first_choice
+        - required:
+            - second_choice
+        - not:
+            anyOf:
+              - required:
+                  - first_choice
+              - required:
+                  - second_choice
+      properties:
+        name:
+          type: string
+          title: name
+        first_choice:
+          type: string
+          title: first_choice
+        second_choice:
+          type: string
+          title: second_choice
+      title: MultiOneof
+      additionalProperties: false
+    optional_oneof.Response:
+      type: object
+      properties:
+        multi:
+          title: multi
+          $ref: '#/components/schemas/optional_oneof.MultiOneof'
+      title: Response
+      additionalProperties: false
+    optional_oneof.UpdateRequest:
+      type: object
+      anyOf:
+        - required:
+            - applepay_settings
+        - not:
+            anyOf:
+              - required:
+                  - applepay_settings
+      properties:
+        thing_id:
+          type: string
+          title: thing_id
+        setting_name:
+          type: string
+          title: setting_name
+        applepay_settings:
+          title: applepay_settings
+          $ref: '#/components/schemas/optional_oneof.ApplePaySettings'
+      title: UpdateRequest
+      additionalProperties: false
+security: []
+tags:
+  - name: optional_oneof.Service
