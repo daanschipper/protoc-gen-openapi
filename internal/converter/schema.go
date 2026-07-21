@@ -1,20 +1,153 @@
 package converter
 
 import (
+	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 
+	"github.com/fatih/camelcase"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/pb33f/libopenapi/utils"
 	"go.yaml.in/yaml/v4"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
-	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/schema"
+	schemapkg "github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/schema"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/visibility"
 )
+
+// referralCollector mirrors the fork's old collection pass to record, per message
+// full-name, the set of "referrers" pointing at it: method `-input`/`-output`
+// pseudo-refs, field full-names, and (for nested/file types) their own name. The
+// resulting counts drive trim-one-use-types (responses + single-use request bodies).
+type referralCollector struct {
+	opts      options.Options
+	seen      map[protoreflect.FullName]struct{}
+	referrals map[string]map[string]struct{}
+}
+
+// collectReferrals builds the referral map for a single file, visiting the same
+// messages that get emitted as components (respecting trim-unused-types,
+// filter-public, and field filtering).
+func collectReferrals(opts options.Options, fd protoreflect.FileDescriptor) map[string]map[string]struct{} {
+	rc := &referralCollector{
+		opts:      opts,
+		seen:      map[protoreflect.FullName]struct{}{},
+		referrals: map[string]map[string]struct{}{},
+	}
+	if !opts.TrimUnusedTypes {
+		messages := fd.Messages()
+		for i := 0; i < messages.Len(); i++ {
+			m := messages.Get(i)
+			rc.collectMessage(string(m.FullName()), m)
+		}
+	}
+	services := fd.Services()
+	for i := 0; i < services.Len(); i++ {
+		methods := services.Get(i).Methods()
+		for j := 0; j < methods.Len(); j++ {
+			method := methods.Get(j)
+			if opts.FilterPublic && !methodIsPublic(method) {
+				continue
+			}
+			rc.collectMessage(fmt.Sprintf("%s-input", method.FullName()), method.Input())
+			rc.collectMessage(fmt.Sprintf("%s-output", method.FullName()), method.Output())
+		}
+	}
+	return rc.referrals
+}
+
+func (rc *referralCollector) addReferral(name protoreflect.FullName, referral string) {
+	key := string(name)
+	if rc.referrals[key] == nil {
+		rc.referrals[key] = map[string]struct{}{}
+	}
+	rc.referrals[key][referral] = struct{}{}
+}
+
+func (rc *referralCollector) collectMessage(referral string, tt protoreflect.MessageDescriptor) {
+	if tt == nil {
+		return
+	}
+	rc.addReferral(tt.FullName(), referral)
+	if _, ok := rc.seen[tt.FullName()]; ok {
+		return
+	}
+	rc.seen[tt.FullName()] = struct{}{}
+
+	fields := tt.Fields()
+	for i := 0; i < fields.Len(); i++ {
+		field := fields.Get(i)
+		if schemapkg.FieldFilteredOut(rc.opts, tt, field) {
+			continue
+		}
+		if field.Message() != nil && !field.IsMap() {
+			rc.collectMessage(string(field.FullName()), field.Message())
+		}
+		if field.IsMap() {
+			if mv := field.MapValue(); mv != nil && mv.Message() != nil {
+				rc.collectMessage(string(field.FullName()), mv.Message())
+			}
+		}
+	}
+	messages := tt.Messages()
+	for i := 0; i < messages.Len(); i++ {
+		m := messages.Get(i)
+		if !m.IsMapEntry() {
+			rc.collectMessage(string(m.FullName()), m)
+		}
+	}
+}
+
+// addCustomDefaultErrorSchema adds the fork's "Error" component schema referenced
+// by the custom-default-error default response.
+func addCustomDefaultErrorSchema(doc *v3.Document) {
+	errorProps := orderedmap.New[string, *base.SchemaProxy]()
+	errorProps.Set("http_status_code", base.CreateSchemaProxy(&base.Schema{
+		Description: "The HTTP status code of the response.",
+		Examples:    []*yaml.Node{utils.CreateStringNode("404")},
+		Type:        []string{"integer"},
+		Format:      "int32",
+	}))
+	errorProps.Set("error_type", base.CreateSchemaProxy(&base.Schema{
+		Description: "The type of error returned.",
+		Type:        []string{"string"},
+		Examples:    []*yaml.Node{utils.CreateStringNode("validation_error")},
+		Enum: []*yaml.Node{
+			utils.CreateStringNode("idempotency_error"),
+			utils.CreateStringNode("internal_error"),
+			utils.CreateStringNode("security_error"),
+			utils.CreateStringNode("syntax_error"),
+			utils.CreateStringNode("validation_error"),
+		},
+	}))
+	errorProps.Set("error_code", base.CreateSchemaProxy(&base.Schema{
+		Description: "A short explanation detailing the error.",
+		Examples:    []*yaml.Node{utils.CreateStringNode("not_found")},
+		Type:        []string{"string"},
+	}))
+	errorProps.Set("error_message", base.CreateSchemaProxy(&base.Schema{
+		Description: "A developer-facing error message.",
+		Examples:    []*yaml.Node{utils.CreateStringNode("Resource not found")},
+		Type:        []string{"string"},
+	}))
+	errorProps.Set("field", base.CreateSchemaProxy(&base.Schema{
+		Description: "Indicates the field that caused the error, if applicable.",
+		Examples:    []*yaml.Node{utils.CreateStringNode("id")},
+		Type:        []string{"string"},
+	}))
+
+	doc.Components.Schemas.Set("Error", base.CreateSchemaProxy(&base.Schema{
+		Title:       "Error",
+		Description: `Error object containing information about the error.`,
+		Properties:  errorProps,
+		Type:        []string{"object"},
+	}))
+}
 
 func AddMessageSchemas(opts options.Options, md protoreflect.MessageDescriptor, doc *v3.Document) {
 	if md == nil {
@@ -24,18 +157,24 @@ func AddMessageSchemas(opts options.Options, md protoreflect.MessageDescriptor, 
 		opts.Logger.Debug("Filtering message due to visibility", slog.String("message", string(md.FullName())), slog.Any("restriction_selectors", opts.AllowedVisibilities))
 		return
 	}
-	if _, ok := doc.Components.Schemas.Get(string(md.FullName())); ok {
+	if _, ok := doc.Components.Schemas.Get(util.DescriptorToId(opts, md)); ok {
 		return
 	}
-	name, schema := schema.MessageToSchema(opts, md)
+	name, schema := schemapkg.MessageToSchema(opts, md)
 	if schema != nil {
 		doc.Components.Schemas.Set(name, base.CreateSchemaProxy(schema))
 	}
 
-	// Messages can have fields
+	// Messages can have fields. Skip types reachable only through fields that are
+	// filtered out (filter-private / required-field-extension allowlist), so they
+	// are trimmed alongside those fields.
 	fields := md.Fields()
 	for i := 0; i < fields.Len(); i++ {
-		AddFieldToSchema(opts, fields.Get(i), doc)
+		field := fields.Get(i)
+		if schemapkg.FieldFilteredOut(opts, md, field) {
+			continue
+		}
+		AddFieldToSchema(opts, field, doc)
 	}
 
 	// Messages can have enums
@@ -69,7 +208,7 @@ func AddEnumToSchema(opts options.Options, ed protoreflect.EnumDescriptor, doc *
 		opts.Logger.Debug("Filtering enum due to visibility", slog.String("enum", string(ed.FullName())), slog.Any("restriction_selectors", opts.AllowedVisibilities))
 		return
 	}
-	if _, ok := doc.Components.Schemas.Get(string(ed.FullName())); ok {
+	if _, ok := doc.Components.Schemas.Get(util.DescriptorToId(opts, ed)); ok {
 		return
 	}
 	name, schema := enumToSchema(opts, ed)
@@ -88,7 +227,12 @@ func enumToSchema(opts options.Options, tt protoreflect.EnumDescriptor) (string,
 			opts.Logger.Debug("Filtering enum value due to visibility", slog.String("enum_value", string(value.FullName())), slog.Any("restriction_selectors", opts.AllowedVisibilities))
 			continue // Skip this enum value
 		}
-		children = append(children, utils.CreateStringNode(string(value.Name())))
+		name := string(value.Name())
+		if opts.TrimEnumNamePrefix {
+			prefix := strings.ToUpper(strings.Join(camelcase.Split(string(tt.Name())), "_")) + "_"
+			name = strings.TrimPrefix(name, prefix)
+		}
+		children = append(children, utils.CreateStringNode(name))
 		if opts.IncludeNumberEnumValues {
 			children = append(children, utils.CreateIntNode(strconv.FormatInt(int64(value.Number()), 10)))
 		}
@@ -98,6 +242,7 @@ func enumToSchema(opts options.Options, tt protoreflect.EnumDescriptor) (string,
 	if opts.FullyQualifiedMessageNames {
 		title = string(tt.FullName())
 	}
+	title = util.TrimMessageSuffix(opts, title)
 	types := []string{"string"}
 	if opts.IncludeNumberEnumValues {
 		types = append(types, "number")
@@ -108,5 +253,5 @@ func enumToSchema(opts options.Options, tt protoreflect.EnumDescriptor) (string,
 		Type:        types,
 		Enum:        children,
 	}
-	return string(tt.FullName()), s
+	return util.DescriptorToId(opts, tt), s
 }

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -83,6 +84,56 @@ type Options struct {
 	AsyncAPIPath string
 	// AsyncAPIChannelTemplate is the template used to construct the channel path for WebSocket endpoints.
 	AsyncAPIChannelTemplate string
+
+	// OptionalOneof renders a proto oneof as "at most one" (a oneOf with an added
+	// none branch) instead of upstream's "exactly one", so a oneof group may be
+	// left unset. Matches proto oneof semantics (0 or 1 member).
+	OptionalOneof bool
+	// No oneOf for optional fields
+	ExplicitOptionalFields bool
+	FilterPublic           bool
+	FilterPrivate          bool
+	// FilterRequiredFieldExtension, when non-zero, is a custom field-options
+	// extension number that drives allowlist filtering. A message opts in when at
+	// least one of its fields carries the extension set to true; opted-in messages
+	// keep only those fields. Messages with no such field are left untouched, so
+	// this coexists with un-annotated protos in the same generation pass.
+	FilterRequiredFieldExtension int32
+	// FilterRequiredFieldExtensionStrict applies the allowlist to every message
+	// rather than only those that declare the extension: a message with no
+	// annotated field becomes an empty object. Use it when the whole generation is
+	// annotated (a single API), so nothing leaks through un-annotated. Without it,
+	// un-annotated messages pass through intact (for mixing annotated protos with
+	// un-annotated ones in one pass).
+	FilterRequiredFieldExtensionStrict bool
+	// TrimUnreferencedSchemas removes component schemas not reachable by $ref from
+	// the paths. Unlike TrimUnusedTypes (which prunes the proto-collection graph),
+	// this prunes the rendered document, so it also drops request messages whose
+	// fields are all consumed as path/query parameters (no body $ref).
+	TrimUnreferencedSchemas bool
+	DirectProtoMessage      bool
+	// Strip suffix from message
+	TrimMessageSuffix string
+	// Strip suffix from service
+	TrimServiceSuffix string
+	// Rename service (list of from;to pairs)
+	RenameService []string
+	// Trim the enum name prefix from the enum value names.
+	TrimEnumNamePrefix bool
+	// Version
+	Version string
+	// No fqn
+	WithoutFqn bool
+	// Global header
+	GlobalHeader bool
+	// TrimOneUseTypes inlines single-use message types instead of referencing a
+	// shared component: single-use response types into the 200 response, and
+	// single-use request-body types into the requestBody. Dropped from components.
+	TrimOneUseTypes bool
+	// Custom default error
+	CustomDefaultError bool
+	// Merge examples
+	MergeExamples bool
 
 	MessageAnnotator        MessageAnnotator
 	FieldAnnotator          FieldAnnotator
@@ -202,6 +253,47 @@ func FromString(s string) (Options, error) {
 			if err != nil {
 				return opts, err
 			}
+		case param == "optional-oneof":
+			opts.OptionalOneof = true
+		case param == "explicit-optional-fields":
+			opts.ExplicitOptionalFields = true
+		case param == "direct-proto-message":
+			opts.DirectProtoMessage = true
+		case param == "filter-public":
+			opts.FilterPublic = true
+		case param == "filter-private":
+			opts.FilterPrivate = true
+		case strings.HasPrefix(param, "filter-required-field-extension="):
+			raw := param[len("filter-required-field-extension="):]
+			num, err := strconv.Atoi(raw)
+			if err != nil || num <= 0 {
+				return opts, fmt.Errorf("filter-required-field-extension must be a positive integer, got '%s'", raw)
+			}
+			opts.FilterRequiredFieldExtension = int32(num)
+		case param == "filter-required-field-extension-strict":
+			opts.FilterRequiredFieldExtensionStrict = true
+		case param == "trim-unreferenced-schemas":
+			opts.TrimUnreferencedSchemas = true
+		case param == "trim-enum-name-prefix":
+			opts.TrimEnumNamePrefix = true
+		case param == "without-fqn":
+			opts.WithoutFqn = true
+		case param == "trim-one-use-types":
+			opts.TrimOneUseTypes = true
+		case param == "custom-default-error":
+			opts.CustomDefaultError = true
+		case param == "merge-examples":
+			opts.MergeExamples = true
+		case strings.HasPrefix(param, "trim-message-suffix="):
+			opts.TrimMessageSuffix = param[len("trim-message-suffix="):]
+		case strings.HasPrefix(param, "trim-service-suffix="):
+			opts.TrimServiceSuffix = param[len("trim-service-suffix="):]
+		case strings.HasPrefix(param, "rename-service="):
+			opts.RenameService = strings.Split(param[len("rename-service="):], ";")
+		case strings.HasPrefix(param, "version="):
+			opts.Version = param[len("version="):]
+		case param == "global-header":
+			opts.GlobalHeader = true
 		case strings.HasPrefix(param, "content-types="):
 			for _, contentType := range strings.Split(param[14:], ";") {
 				contentType = strings.TrimSpace(contentType)

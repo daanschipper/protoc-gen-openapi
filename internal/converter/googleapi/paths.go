@@ -12,6 +12,7 @@ import (
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
+	"github.com/pb33f/libopenapi/utils"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -33,7 +34,7 @@ type PathItemsResult struct {
 	DeferredParams *orderedmap.Map[string, []*v3.Parameter]
 }
 
-func MakePathItems(opts options.Options, md protoreflect.MethodDescriptor) (*PathItemsResult, bool) {
+func MakePathItems(opts options.Options, md protoreflect.MethodDescriptor, spec *v3.Document, referrals map[string]map[string]struct{}) (*PathItemsResult, bool) {
 	if opts.IgnoreGoogleapiHTTP {
 		return nil, false
 	}
@@ -45,10 +46,28 @@ func MakePathItems(opts options.Options, md protoreflect.MethodDescriptor) (*Pat
 	if !ok {
 		return nil, false
 	}
-	return httpRuleToPathMap(opts, md, rule, nil), true
+	return httpRuleToPathMap(opts, md, rule, nil, spec, referrals), true
 }
 
-func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, rule *annotations.HttpRule, resMap map[string]string) *PathItemsResult {
+// dropReferrerAndMaybeDelete removes the given referrer from the input/output
+// schema's referral set. If no referrers remain, the component schema is deleted
+// and true is returned so the caller can inline the type instead of $ref'ing it.
+// Used by trim-one-use-types to inline a single-use request body and drop it
+// from components when no longer referenced.
+func dropReferrerAndMaybeDelete(opts options.Options, spec *v3.Document, referrals map[string]map[string]struct{}, md protoreflect.MessageDescriptor, referrer string) bool {
+	if spec == nil || referrals == nil {
+		return false
+	}
+	refs := referrals[string(md.FullName())]
+	delete(refs, referrer)
+	if len(refs) == 0 {
+		spec.Components.Schemas.Delete(util.DescriptorToId(opts, md))
+		return true
+	}
+	return false
+}
+
+func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, rule *annotations.HttpRule, resMap map[string]string, spec *v3.Document, referrals map[string]map[string]struct{}) *PathItemsResult {
 	if resMap == nil {
 		if opts.ResourceMap != nil {
 			resMap = opts.ResourceMap
@@ -97,7 +116,9 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 	service := md.Parent().(protoreflect.ServiceDescriptor)
 
 	operationId := string(md.FullName())
-	if opts.ShortOperationIds {
+	if opts.WithoutFqn {
+		operationId = fmt.Sprintf("%s.%s", util.ServiceTagName(opts, service), md.Name())
+	} else if opts.ShortOperationIds {
 		operationId = string(service.Name()) + "_" + string(md.Name())
 	}
 	summary, description := util.FormatOperationComments(fd.SourceLocations().ByDescriptor(md))
@@ -112,11 +133,7 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 	}
 
 	if !opts.WithoutDefaultTags {
-		tagName := string(service.FullName())
-		if opts.ShortServiceTags {
-			tagName = string(service.Name())
-		}
-		op.Tags = []string{tagName}
+		op.Tags = []string{util.ServiceTagName(opts, service)}
 	}
 
 	fieldNamesInPath := map[string]struct{}{}
@@ -133,6 +150,7 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 			// query/param or request body
 			fieldNamesInPath[string(field.FullName())] = struct{}{}
 			fieldNamesInPath[strings.Join(jsonPath, ".")] = struct{}{} // sometimes JSON field names are used
+			fieldNamesInPath[param] = struct{}{}                       // proto field path, matches with-proto-names property keys
 			schemaProxy := schema.FieldToSchema(opts, nil, field)
 			newParameter := buildParameter(opts, param, "path", field, schemaProxy, proto.Bool(true), false)
 			pathParams = append(pathParams, newParameter)
@@ -164,6 +182,7 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 					if field != nil {
 						fieldNamesInPath[string(field.FullName())] = struct{}{}
 						fieldNamesInPath[field.JSONName()] = struct{}{}
+						fieldNamesInPath[paramName] = struct{}{} // proto field path, matches with-proto-names property keys
 						parameterSchema := schema.FieldToSchema(opts, nil, field)
 						// Path parameters must be primitives.
 						if slices.Contains(parameterSchema.Schema().Type, "object") || slices.Contains(parameterSchema.Schema().Type, "array") {
@@ -238,6 +257,8 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 		case "":
 			newQueryParams := flattenToParams(opts, md.Input(), "", fieldNamesInPath)
 			op.Parameters = util.MergeParameters(op.Parameters, newQueryParams)
+			// The input is fully consumed as query/path params; the now-unreferenced
+			// request schema is pruned by trim-unreferenced-schemas.
 		case "*":
 			if len(fieldNamesInPath) > 0 {
 				_, s := schema.MessageToSchema(opts, md.Input())
@@ -247,10 +268,12 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 					// properties and oneOf under AllOf, setting s.Properties to nil.
 					// In that case, find the properties inside AllOf.
 					props := s.Properties
+					allOfIdx := -1
 					if props == nil && len(s.AllOf) > 0 {
-						for _, entry := range s.AllOf {
+						for i, entry := range s.AllOf {
 							if es := entry.Schema(); es != nil && es.Properties != nil && es.Properties.Len() > 0 {
 								props = es.Properties
+								allOfIdx = i
 								break
 							}
 						}
@@ -267,16 +290,29 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 								}
 							}
 						}
+						// Drop the allOf entry if removing path params emptied it.
+						if allOfIdx >= 0 && props.Len() == 0 {
+							s.AllOf = slices.Delete(s.AllOf, allOfIdx, allOfIdx+1)
+						}
 					}
 					hasContent := (props != nil && props.Len() > 0) || len(s.AllOf) > 0 || len(s.OneOf) > 0
 					if hasContent {
 						op.RequestBody = util.MethodToRequestBody(opts, md, base.CreateSchemaProxy(s), false)
 					}
 				}
+				// Body inlines the input (minus path params); the now-unreferenced
+				// request schema is pruned by trim-unreferenced-schemas.
 			} else {
-				inputName := string(md.Input().FullName())
-				s := base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(inputName))
-				op.RequestBody = util.MethodToRequestBody(opts, md, s, false)
+				// Single-use request body: inline the message and drop it from
+				// components (trim-one-use-types); else reference the shared schema.
+				if opts.TrimOneUseTypes && dropReferrerAndMaybeDelete(opts, spec, referrals, md.Input(), fmt.Sprintf("%s-input", md.FullName())) {
+					_, s := schema.MessageToSchema(opts, md.Input())
+					op.RequestBody = util.MethodToRequestBody(opts, md, base.CreateSchemaProxy(s), false)
+				} else {
+					inputName := util.DescriptorToId(opts, md.Input())
+					s := base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(opts, inputName))
+					op.RequestBody = util.MethodToRequestBody(opts, md, s, false)
+				}
 			}
 
 		default:
@@ -317,7 +353,17 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 	if !opts.DisableDefaultResponse {
 		var outputSchema *base.SchemaProxy
 		if rule.ResponseBody == "" {
-			outputSchema = base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(string(md.Output().FullName())))
+			// If this is the only method referencing the output schema, inline it
+			// and drop the component; otherwise keep the shared $ref.
+			refs := referrals[string(md.Output().FullName())]
+			if opts.TrimOneUseTypes && spec != nil && len(refs) == 1 {
+				delete(refs, fmt.Sprintf("%s-output", md.FullName()))
+				spec.Components.Schemas.Delete(util.DescriptorToId(opts, md.Output()))
+				_, s := schema.MessageToSchema(opts, md.Output())
+				outputSchema = base.CreateSchemaProxy(s)
+			} else {
+				outputSchema = base.CreateSchemaProxyRef("#/components/schemas/" + util.FormatTypeRef(opts, util.DescriptorToId(opts, md.Output())))
+			}
 		} else {
 			if fd, _ := resolveField(opts, md.Output(), rule.ResponseBody); fd != nil {
 				outputSchema = schema.FieldToSchema(opts, nil, fd)
@@ -347,6 +393,32 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 		Codes: codeMap,
 	}
 
+	if opts.CustomDefaultError {
+		op.Responses.Default = &v3.Response{
+			Description: "Error",
+			Content: util.MakeMediaTypes(
+				opts,
+				base.CreateSchemaProxyRef("#/components/schemas/Error"),
+				false,
+				false,
+			),
+		}
+	}
+
+	if opts.GlobalHeader {
+		globalParam := &v3.Parameter{
+			Name:        "Rootline-Version",
+			Required:    util.BoolPtr(true),
+			In:          "header",
+			Description: "The version of the Rootline API.",
+			Schema: base.CreateSchemaProxy(&base.Schema{
+				Type:    []string{"string"},
+				Default: utils.CreateStringNode(opts.Version),
+			}),
+		}
+		op.Parameters = append([]*v3.Parameter{globalParam}, op.Parameters...)
+	}
+
 	switch method {
 	case http.MethodGet:
 		pathItem.Get = op
@@ -369,7 +441,7 @@ func httpRuleToPathMap(opts options.Options, md protoreflect.MethodDescriptor, r
 	}
 
 	for _, binding := range rule.AdditionalBindings {
-		sub := httpRuleToPathMap(opts, md, binding, resMap)
+		sub := httpRuleToPathMap(opts, md, binding, resMap, nil, nil)
 		for pair := sub.PathItems.First(); pair != nil; pair = pair.Next() {
 			path := util.MakePath(opts, pair.Key())
 			paths.Set(path, pair.Value())
@@ -593,6 +665,7 @@ func singularize(resMap map[string]string, plural string) string {
 func buildParameter(opts options.Options, name string, in string, field protoreflect.FieldDescriptor, schemaProxy *base.SchemaProxy, required *bool, allowReserved bool) *v3.Parameter {
 	loc := field.ParentFile().SourceLocations().ByDescriptor(field)
 	var description string
+	// Lift the field description up to the parameter (upstream behavior).
 	if schemaProxy != nil && schemaProxy.Schema() != nil {
 		description = schemaProxy.Schema().Description
 		schemaProxy.Schema().Description = ""
