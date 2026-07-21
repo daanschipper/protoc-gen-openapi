@@ -30,3 +30,5 @@ protoc-gen-connect-openapi
 
 coverage.out
 coverage.html
+
+.idea/
