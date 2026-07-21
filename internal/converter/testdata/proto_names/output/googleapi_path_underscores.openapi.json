@@ -1,0 +1,98 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "googleapi_path_underscores"
+  },
+  "paths": {
+    "/v1/pathbefore/{id_with_under_scores}/pathafter": {
+      "post": {
+        "tags": [
+          "googleapi_path_underscores.Service"
+        ],
+        "summary": "Method",
+        "operationId": "googleapi_path_underscores.Service.Method",
+        "parameters": [
+          {
+            "name": "id_with_under_scores",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id_with_under_scores"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id_with_under_scores": {
+                    "type": "string",
+                    "title": "id_with_under_scores"
+                  },
+                  "reference": {
+                    "type": "string",
+                    "title": "reference"
+                  }
+                },
+                "title": "Request",
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/googleapi_path_underscores.Response"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "googleapi_path_underscores.Request": {
+        "type": "object",
+        "properties": {
+          "id_with_under_scores": {
+            "type": "string",
+            "title": "id_with_under_scores"
+          },
+          "reference": {
+            "type": "string",
+            "title": "reference"
+          }
+        },
+        "title": "Request",
+        "additionalProperties": false
+      },
+      "googleapi_path_underscores.Response": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "message"
+          }
+        },
+        "title": "Response",
+        "additionalProperties": false
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "googleapi_path_underscores.Service"
+    }
+  ]
+}

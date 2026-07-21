@@ -1,0 +1,121 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "trim_unreferenced_schemas"
+  },
+  "paths": {
+    "/v1/things/{id}": {
+      "delete": {
+        "tags": [
+          "trim_unreferenced_schemas.Service"
+        ],
+        "summary": "DeleteThing",
+        "description": "Path-only: DeleteThingRequest is never $ref'd and must be dropped.",
+        "operationId": "trim_unreferenced_schemas.Service.DeleteThing",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/trim_unreferenced_schemas.DeleteThingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/things": {
+      "post": {
+        "tags": [
+          "trim_unreferenced_schemas.Service"
+        ],
+        "summary": "CreateThing",
+        "description": "Body request: CreateThingRequest is $ref'd and must be kept.",
+        "operationId": "trim_unreferenced_schemas.Service.CreateThing",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "thing": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/trim_unreferenced_schemas.Thing"
+                      }
+                    ],
+                    "title": "thing"
+                  }
+                },
+                "title": "CreateThingRequest",
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/trim_unreferenced_schemas.Thing"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "trim_unreferenced_schemas.DeleteThingResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "status"
+          }
+        },
+        "title": "DeleteThingResponse",
+        "additionalProperties": false
+      },
+      "trim_unreferenced_schemas.Thing": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          },
+          "name": {
+            "type": "string",
+            "title": "name"
+          }
+        },
+        "title": "Thing",
+        "additionalProperties": false
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "trim_unreferenced_schemas.Service"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+openapi: 3.1.0
+info:
+  title: trim_enum_name_prefix
+paths:
+  /trim_enum_name_prefix.Foo/Bar:
+    post:
+      tags:
+        - trim_enum_name_prefix.Foo
+      summary: Bar
+      operationId: trim_enum_name_prefix.Foo.Bar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/trim_enum_name_prefix.Request'
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/trim_enum_name_prefix.GatewayResponseProto'
+components:
+  schemas:
+    trim_enum_name_prefix.GatewayResponseCodeProto:
+      type: string
+      title: GatewayResponseCodeProto
+      enum:
+        - UNSPECIFIED
+        - APPROVED
+        - REFUSED
+    trim_enum_name_prefix.GatewayResponseProto:
+      type: object
+      properties:
+        responseCode:
+          type: string
+          title: response_code
+        responseCodeDescription:
+          type: string
+          title: response_code_description
+        gatewayResponseCode:
+          allOf:
+            - $ref: '#/components/schemas/trim_enum_name_prefix.GatewayResponseCodeProto'
+          title: gateway_response_code
+      title: GatewayResponseProto
+      additionalProperties: false
+    trim_enum_name_prefix.Request:
+      type: object
+      properties:
+        description:
+          type: string
+          title: description
+      title: Request
+      additionalProperties: false
+security: []
+tags:
+  - name: trim_enum_name_prefix.Foo

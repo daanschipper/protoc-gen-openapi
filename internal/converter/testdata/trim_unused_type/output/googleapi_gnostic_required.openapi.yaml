@@ -1,0 +1,98 @@
+openapi: 3.1.0
+info:
+  title: has_unused_types_googleapi_gnostic_required
+paths:
+  /v1/get/{id}:
+    get:
+      tags:
+        - has_unused_types_googleapi_gnostic_required.SomeOtherServiceName
+      summary: GetPayment
+      operationId: has_unused_types_googleapi_gnostic_required.SomeOtherServiceName.GetPayment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: id
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/has_unused_types_googleapi_gnostic_required.GetReply'
+  /v1/patchmethod/{id}:
+    patch:
+      tags:
+        - has_unused_types_googleapi_gnostic_required.SomeOtherServiceName
+      summary: PatchMethod
+      operationId: has_unused_types_googleapi_gnostic_required.SomeOtherServiceName.PatchMethod
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  title: name
+              title: Patch Request
+              additionalProperties: false
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/has_unused_types_googleapi_gnostic_required.PatchReply'
+components:
+  schemas:
+    has_unused_types_googleapi_gnostic_required.GetReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+      title: GetReply
+      additionalProperties: false
+    has_unused_types_googleapi_gnostic_required.GetRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+      title: GetRequest
+      additionalProperties: false
+    has_unused_types_googleapi_gnostic_required.PatchReply:
+      type: object
+      properties:
+        message:
+          type: string
+          title: message
+      title: PatchReply
+      additionalProperties: false
+    has_unused_types_googleapi_gnostic_required.PatchRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        name:
+          type: string
+          title: name
+      title: Patch Request
+      required:
+        - ""
+      additionalProperties: false
+security: []
+tags:
+  - name: has_unused_types_googleapi_gnostic_required.SomeOtherServiceName

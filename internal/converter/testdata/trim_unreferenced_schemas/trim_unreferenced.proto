@@ -1,0 +1,40 @@
+// Tests trim-unreferenced-schemas: a request message whose fields are all
+// consumed as path parameters (no body) is collected by trim-unused-types but
+// never $ref'd, so it must be dropped. Request/response schemas that ARE
+// referenced must be kept.
+syntax = "proto3";
+
+package trim_unreferenced_schemas;
+
+import "google/api/annotations.proto";
+
+service Service {
+  // Path-only: DeleteThingRequest is never $ref'd and must be dropped.
+  rpc DeleteThing(DeleteThingRequest) returns (DeleteThingResponse) {
+    option (google.api.http) = {delete: "/v1/things/{id}"};
+  }
+  // Body request: CreateThingRequest is $ref'd and must be kept.
+  rpc CreateThing(CreateThingRequest) returns (Thing) {
+    option (google.api.http) = {
+      post: "/v1/things"
+      body: "*"
+    };
+  }
+}
+
+message DeleteThingRequest {
+  string id = 1;
+}
+
+message DeleteThingResponse {
+  string status = 1;
+}
+
+message CreateThingRequest {
+  Thing thing = 1;
+}
+
+message Thing {
+  string id = 1;
+  string name = 2;
+}

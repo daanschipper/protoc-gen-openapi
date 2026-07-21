@@ -1,0 +1,98 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "filter_required_field_extension"
+  },
+  "paths": {
+    "/filter_required_field_extension.Greeter/SayHello": {
+      "post": {
+        "tags": [
+          "filter_required_field_extension.Greeter"
+        ],
+        "summary": "SayHello",
+        "operationId": "filter_required_field_extension.Greeter.SayHello",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/filter_required_field_extension.HelloRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/filter_required_field_extension.HelloReply"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "filter_required_field_extension.HelloReply": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "message"
+          },
+          "traceId": {
+            "type": "string",
+            "title": "trace_id"
+          }
+        },
+        "title": "HelloReply",
+        "additionalProperties": false,
+        "description": "Not opted in (no external fields): left fully intact."
+      },
+      "filter_required_field_extension.HelloRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "name"
+          },
+          "detail": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/filter_required_field_extension.PublicDetail"
+              }
+            ],
+            "title": "detail",
+            "description": "kept"
+          }
+        },
+        "title": "HelloRequest",
+        "additionalProperties": false,
+        "description": "Opted in (has external fields): only the external fields survive."
+      },
+      "filter_required_field_extension.PublicDetail": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "label"
+          }
+        },
+        "title": "PublicDetail",
+        "additionalProperties": false,
+        "description": "Reachable through an external field, and itself opted in."
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "filter_required_field_extension.Greeter"
+    }
+  ]
+}

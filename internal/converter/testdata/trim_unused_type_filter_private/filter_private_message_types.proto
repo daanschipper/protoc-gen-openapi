@@ -1,0 +1,46 @@
+// Tests that message types referenced only by private fields are excluded
+// from OpenAPI output when both filter-private and trim-unused-types are on.
+syntax = "proto3";
+
+package filter_private_message_types;
+
+import "openapi/annotations.proto";
+
+service Greeter {
+  rpc SayHello(HelloRequest) returns (HelloReply) {}
+}
+
+// A message type referenced only by a private field — should not appear in OpenAPI output.
+message PrivateData {
+  string secret = 1;
+}
+
+// An enum referenced only by a private field — should not appear in OpenAPI output.
+enum PrivateEnum {
+  PRIVATE_ENUM_UNSPECIFIED = 0;
+  PRIVATE_ENUM_VALUE = 1;
+}
+
+// A message type referenced by a public field — should appear in OpenAPI output.
+message PublicData {
+  string value = 1;
+}
+
+message HelloRequest {
+  string name = 1;
+  PublicData public_data = 2;
+  PrivateData private_data = 3 [
+    (openapi.field_params) = {
+      private: true;
+    }
+  ];
+  PrivateEnum private_enum = 4 [
+    (openapi.field_params) = {
+      private: true;
+    }
+  ];
+}
+
+message HelloReply {
+  string message = 1;
+}
