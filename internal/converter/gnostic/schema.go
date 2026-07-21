@@ -3,6 +3,7 @@ package gnostic
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"slices"
 
 	goa3 "github.com/google/gnostic/openapiv3"
@@ -67,6 +68,8 @@ func schemaWithAnnotations(opts options.Options, schema *base.Schema, gnosticSch
 		if gnosticSchema.Example.Yaml != "" {
 			var v string
 			if err := yaml.Unmarshal([]byte(gnosticSchema.Example.GetYaml()), &v); err != nil {
+				// Non-string (object/array) example: decode into a structured node
+				// so it renders as a real object/array rather than a stringified map.
 				var node any
 				if err := yaml.Unmarshal([]byte(gnosticSchema.Example.GetYaml()), &node); err != nil {
 					opts.Logger.Warn("unable to unmarshal example", slog.Any("error", err))
@@ -229,7 +232,14 @@ func schemaWithAnnotations(opts options.Options, schema *base.Schema, gnosticSch
 
 func expandExampleEntry(entry any) *yaml.Node {
 	switch vv := entry.(type) {
-	//Handle mapping nodes
+	// Handle mapping nodes. go.yaml.in/yaml decodes objects into map[string]any;
+	// map[any]any is kept for decoders that produce interface keys.
+	case map[string]any:
+		node := utils.CreateEmptyMapNode()
+		for _, k := range slices.Sorted(maps.Keys(vv)) {
+			node.Content = append(node.Content, utils.CreateStringNode(k), expandExampleEntry(vv[k]))
+		}
+		return node
 	case map[any]any:
 		node := utils.CreateEmptyMapNode()
 		for k, v := range vv {

@@ -11,10 +11,31 @@ import (
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/twirp"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/util"
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/visibility"
+	oasExtension "github.com/sudorandom/protoc-gen-connect-openapi/openapi"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// methodIsPublic reports whether a method carries the fork's
+// (api...OpenApiOptions).public extension set to true.
+func methodIsPublic(method protoreflect.MethodDescriptor) bool {
+	ext := proto.GetExtension(method.Options(), oasExtension.E_MethodParams)
+	if ext == nil {
+		return false
+	}
+	if ext == oasExtension.E_MethodParams.InterfaceOf(oasExtension.E_MethodParams.Zero()) {
+		return false
+	}
+	openApiOptions, ok := ext.(*oasExtension.OpenApiOptions)
+	if !ok {
+		return false
+	}
+	return openApiOptions.GetPublic()
+}
+
 func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, doc *v3.Document) error {
+	// Referral counts drive trim-one-use-types (responses + single-use request bodies).
+	referrals := collectReferrals(opts, fd)
 	services := fd.Services()
 	for i := 0; i < services.Len(); i++ {
 		service := services.Get(i)
@@ -31,6 +52,11 @@ func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, 
 
 			if visibility.ShouldBeFiltered(visibility.GetVisibilityRule(method), opts.AllowedVisibilities) {
 				opts.Logger.Debug("Filtering method due to visibility", slog.String("method", string(method.FullName())), slog.Any("restriction_selectors", opts.AllowedVisibilities))
+				continue
+			}
+
+			// filter-public: drop methods (and their schemas) not marked public.
+			if opts.FilterPublic && !methodIsPublic(method) {
 				continue
 			}
 
@@ -64,7 +90,7 @@ func addPathItemsFromFile(opts options.Options, fd protoreflect.FileDescriptor, 
 			var isGoogleHTTP bool
 			if opts.FeatureEnabled(options.FeatureGoogleAPIHTTP) {
 				var result *googleapi.PathItemsResult
-				result, isGoogleHTTP = googleapi.MakePathItems(opts, method)
+				result, isGoogleHTTP = googleapi.MakePathItems(opts, method, doc, referrals)
 
 				if result != nil {
 					for pair := result.PathItems.First(); pair != nil; pair = pair.Next() {

@@ -1,6 +1,8 @@
 package util
 
 import (
+	"fmt"
+	"log"
 	"path"
 	"regexp"
 	"slices"
@@ -12,9 +14,125 @@ import (
 	"github.com/sudorandom/protoc-gen-connect-openapi/internal/converter/options"
 	yamlv3 "go.yaml.in/yaml/v3"
 	"go.yaml.in/yaml/v4"
+	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
+
+// FieldHasBoolExtension reports whether the field's options carry the extension
+// with the given field number set to boolean true. It resolves the extension
+// whether it was parsed as a known extension or preserved as an unknown field —
+// the latter being the common case for extensions not compiled into this plugin,
+// which is why the number, rather than a generated Go type, is the key.
+func FieldHasBoolExtension(field protoreflect.FieldDescriptor, number int32) bool {
+	options := field.Options()
+	if options == nil {
+		return false
+	}
+	message := options.ProtoReflect()
+
+	found := false
+	message.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
+		if int32(fd.Number()) == number && fd.Kind() == protoreflect.BoolKind && v.Bool() {
+			found = true
+			return false
+		}
+		return true
+	})
+	if found {
+		return true
+	}
+
+	// Not known to this plugin's registry: walk the raw unknown option bytes.
+	unknown := message.GetUnknown()
+	for len(unknown) > 0 {
+		num, kind, n := protowire.ConsumeTag(unknown)
+		if n < 0 {
+			return false
+		}
+		unknown = unknown[n:]
+		if int32(num) == number && kind == protowire.VarintType {
+			value, vn := protowire.ConsumeVarint(unknown)
+			if vn < 0 {
+				return false
+			}
+			if value == 1 {
+				return true
+			}
+			unknown = unknown[vn:]
+			continue
+		}
+		vn := protowire.ConsumeFieldValue(num, kind, unknown)
+		if vn < 0 {
+			return false
+		}
+		unknown = unknown[vn:]
+	}
+	return false
+}
+
+// MessageHasFieldExtension reports whether any field of the message carries the
+// given bool extension set to true. It decides whether a message opts in to
+// allowlist filtering driven by FilterRequiredFieldExtension.
+func MessageHasFieldExtension(message protoreflect.MessageDescriptor, number int32) bool {
+	fields := message.Fields()
+	for i := 0; i < fields.Len(); i++ {
+		if FieldHasBoolExtension(fields.Get(i), number) {
+			return true
+		}
+	}
+	return false
+}
+
+// ServiceTagName computes the OpenAPI tag / operation tag name for a service,
+// honoring short names (ShortServiceTags or WithoutFqn), TrimServiceSuffix, and
+// RenameService (a [from, to] pair). With no fork/short options it returns the
+// full name, matching upstream.
+func ServiceTagName(opts options.Options, service protoreflect.ServiceDescriptor) string {
+	name := string(service.FullName())
+	if opts.ShortServiceTags || opts.WithoutFqn {
+		name = string(service.Name())
+	}
+	if opts.TrimServiceSuffix != "" {
+		name = strings.TrimSuffix(name, opts.TrimServiceSuffix)
+	}
+	if len(opts.RenameService) >= 2 && name == opts.RenameService[0] {
+		name = opts.RenameService[1]
+	}
+	return name
+}
+
+// TrimMessageSuffix strips the configured message-name suffix, if any.
+func TrimMessageSuffix(opts options.Options, messageName string) string {
+	if opts.TrimMessageSuffix == "" {
+		return messageName
+	}
+	return strings.TrimSuffix(messageName, opts.TrimMessageSuffix)
+}
+
+// TrimFqn returns the schema-name base for a descriptor: its full name, or just
+// the short name when WithoutFqn is set, with any message suffix trimmed.
+func TrimFqn(opts options.Options, descriptor protoreflect.Descriptor) string {
+	descriptorName := string(descriptor.FullName())
+	if opts.WithoutFqn {
+		descriptorName = string(descriptor.Name())
+	}
+	return TrimMessageSuffix(opts, descriptorName)
+}
+
+// DescriptorToId produces the OpenAPI component key (and $ref target) for a
+// message or enum descriptor, honoring WithoutFqn and TrimMessageSuffix. With
+// both flags off it returns string(descriptor.FullName()), matching upstream.
+func DescriptorToId(opts options.Options, descriptor protoreflect.Descriptor) string {
+	switch descriptor.(type) {
+	case protoreflect.MessageDescriptor:
+		return TrimFqn(opts, descriptor)
+	case protoreflect.EnumDescriptor:
+		return fmt.Sprintf("%s.%s", TrimMessageSuffix(opts, TrimFqn(opts, descriptor.Parent())), TrimMessageSuffix(opts, string(descriptor.Name())))
+	}
+	log.Fatalf("Unsupported descriptor type: %T", descriptor)
+	return ""
+}
 
 func ConvertNodeV3toV4(n *yamlv3.Node) *yaml.Node {
 	if n == nil {
@@ -153,8 +271,8 @@ func BoolPtr(b bool) *bool {
 	return &b
 }
 
-func FormatTypeRef(t string) string {
-	return strings.TrimPrefix(t, ".")
+func FormatTypeRef(opts options.Options, t string) string {
+	return TrimMessageSuffix(opts, strings.TrimPrefix(t, "."))
 }
 
 func IsMethodDeprecated(md protoreflect.MethodDescriptor) *bool {
@@ -241,12 +359,12 @@ func Singular(plural string) string {
 // ResolveSchemaRef takes a reference string and determines if it is a fully
 // qualified protobuf message name. If so, it converts it to a valid OpenAPI
 // schema reference. Otherwise, it returns the original string.
-func ResolveSchemaRef(ref string) string {
+func ResolveSchemaRef(opts options.Options, ref string) string {
 	if strings.HasPrefix(ref, ".") {
 		// This is a fully qualified proto name. We need to look up the
 		// message and convert it to a schema reference.
 		messageName := strings.TrimPrefix(ref, ".")
-		return "#/components/schemas/" + FormatTypeRef(messageName)
+		return "#/components/schemas/" + FormatTypeRef(opts, messageName)
 	}
 	return ref
 }
