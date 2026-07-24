@@ -1,0 +1,276 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "webhooks"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Event": {
+        "type": "object",
+        "anyOf": [
+          {
+            "required": [
+              "payment"
+            ]
+          },
+          {
+            "required": [
+              "refund"
+            ]
+          },
+          {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "payment"
+                  ]
+                },
+                {
+                  "required": [
+                    "refund"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "properties": {
+          "object": {
+            "type": "string",
+            "title": "object"
+          },
+          "event_type": {
+            "type": "string",
+            "title": "event_type"
+          },
+          "event_time": {
+            "type": "string",
+            "title": "event_time"
+          },
+          "payment": {
+            "title": "payment",
+            "$ref": "#/components/schemas/Payment"
+          },
+          "refund": {
+            "title": "refund",
+            "$ref": "#/components/schemas/Refund"
+          }
+        },
+        "title": "Event",
+        "additionalProperties": false
+      },
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          },
+          "amount": {
+            "type": [
+              "integer",
+              "string"
+            ],
+            "title": "amount",
+            "format": "int64"
+          }
+        },
+        "title": "Payment",
+        "additionalProperties": false
+      },
+      "PaymentFailedEvent": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "title": "object"
+          },
+          "event_type": {
+            "type": "string",
+            "examples": [
+              "payment.failed"
+            ],
+            "const": "payment.failed"
+          },
+          "event_time": {
+            "type": "string",
+            "title": "event_time"
+          },
+          "payment": {
+            "title": "payment",
+            "$ref": "#/components/schemas/Payment"
+          }
+        },
+        "title": "PaymentFailed",
+        "required": [
+          "event_type",
+          "payment"
+        ],
+        "additionalProperties": false
+      },
+      "PaymentSucceededEvent": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "title": "object"
+          },
+          "event_type": {
+            "type": "string",
+            "examples": [
+              "payment.succeeded"
+            ],
+            "const": "payment.succeeded"
+          },
+          "event_time": {
+            "type": "string",
+            "title": "event_time"
+          },
+          "payment": {
+            "title": "payment",
+            "$ref": "#/components/schemas/Payment"
+          }
+        },
+        "title": "PaymentSucceeded",
+        "required": [
+          "event_type",
+          "payment"
+        ],
+        "additionalProperties": false
+      },
+      "Refund": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          },
+          "payment_id": {
+            "type": "string",
+            "title": "payment_id"
+          }
+        },
+        "title": "Refund",
+        "additionalProperties": false
+      },
+      "RefundCompletedEvent": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "title": "object"
+          },
+          "event_type": {
+            "type": "string",
+            "examples": [
+              "refund.completed"
+            ],
+            "const": "refund.completed"
+          },
+          "event_time": {
+            "type": "string",
+            "title": "event_time"
+          },
+          "refund": {
+            "title": "refund",
+            "$ref": "#/components/schemas/Refund"
+          }
+        },
+        "title": "RefundCompleted",
+        "required": [
+          "event_type",
+          "refund"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "Payment events"
+    },
+    {
+      "name": "Refund events"
+    }
+  ],
+  "webhooks": {
+    "payment.succeeded": {
+      "post": {
+        "tags": [
+          "Payment events"
+        ],
+        "summary": "payment.succeeded",
+        "description": "The payment was successfully authorized.",
+        "operationId": "webhook.payment.succeeded",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentSucceededEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx status code to acknowledge receipt of the event."
+          }
+        }
+      }
+    },
+    "payment.failed": {
+      "post": {
+        "tags": [
+          "Payment events"
+        ],
+        "summary": "payment.failed",
+        "description": "The authorization was declined or errored.",
+        "operationId": "webhook.payment.failed",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentFailedEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx status code to acknowledge receipt of the event."
+          }
+        }
+      }
+    },
+    "refund.completed": {
+      "post": {
+        "tags": [
+          "Refund events"
+        ],
+        "summary": "refund.completed",
+        "description": "The refund was processed.",
+        "operationId": "webhook.refund.completed",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundCompletedEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 2xx status code to acknowledge receipt of the event."
+          }
+        }
+      }
+    }
+  }
+}

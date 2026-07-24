@@ -160,9 +160,13 @@ func AddMessageSchemas(opts options.Options, md protoreflect.MessageDescriptor, 
 	if _, ok := doc.Components.Schemas.Get(util.DescriptorToId(opts, md)); ok {
 		return
 	}
-	name, schema := schemapkg.MessageToSchema(opts, md)
+	// Key by DescriptorToId so the component id matches how fields reference it
+	// (ReferenceFieldToSchema uses DescriptorToId). MessageToSchema returns the same
+	// id for regular messages, but well-known wrappers return their FQN, which under
+	// without-fqn diverges from the short ref and leaves the $ref unresolved.
+	_, schema := schemapkg.MessageToSchema(opts, md)
 	if schema != nil {
-		doc.Components.Schemas.Set(name, base.CreateSchemaProxy(schema))
+		doc.Components.Schemas.Set(util.DescriptorToId(opts, md), base.CreateSchemaProxy(schema))
 	}
 
 	// Messages can have fields. Skip types reachable only through fields that are

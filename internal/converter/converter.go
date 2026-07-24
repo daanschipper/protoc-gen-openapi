@@ -453,6 +453,7 @@ func appendToSpec(opts options.Options, spec *v3.Document, fd protoreflect.FileD
 	if err := addPathItemsFromFile(opts, fd, spec); err != nil {
 		return err
 	}
+	addWebhooksFromFile(opts, fd, spec)
 	spec.Tags = append(spec.Tags, fileToTags(opts, fd)...)
 
 	if opts.CustomDefaultError && fd.Services().Len() > 0 {

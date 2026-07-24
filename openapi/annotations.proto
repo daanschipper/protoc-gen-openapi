@@ -14,10 +14,34 @@ message OpenApiFilterPrivate {
   optional bool private = 1;
 }
 
+// WebhookEventList is the ordered set of webhook events an envelope message emits.
+// Emission (and thus the rendered order) follows this list, so events can be grouped
+// by category independently of the oneof payload field order.
+message WebhookEventList {
+  repeated WebhookEvent event = 1;
+}
+
+message WebhookEvent {
+  // type is the event type, e.g. "payment.succeeded". It is the webhook map key and
+  // the operation summary.
+  string type = 1;
+  // payload_field names the oneof field on the envelope carrying this event's payload.
+  string payload_field = 2;
+  // category groups the event (an OpenAPI tag), e.g. "Payment events".
+  string category = 3;
+  string description = 4;
+}
+
 extend google.protobuf.MethodOptions {
   OpenApiOptions method_params = 2506;
 }
 
 extend google.protobuf.FieldOptions {
   OpenApiFilterPrivate field_params = 2506;
+}
+
+extend google.protobuf.MessageOptions {
+  // webhook_envelope marks a message as a webhook envelope and lists, in render
+  // order, the events it emits. One OpenAPI 3.1 webhook is generated per event.
+  WebhookEventList webhook_envelope = 2506;
 }

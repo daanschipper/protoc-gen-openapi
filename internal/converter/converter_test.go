@@ -32,6 +32,7 @@ var scenarios = []Scenario{
 	{Name: "with_proto_annotations", Options: "with-proto-annotations"},
 	{Name: "without_default_tags", Options: "without-default-tags"},
 	{Name: "trim_unused_type", Options: "trim-unused-types"},
+	{Name: "webhooks", Options: "trim-unused-types,without-fqn,with-proto-names,content-types=json,optional-oneof"},
 	{Name: "with_base", Options: "base=testdata/with_base/base.yaml,trim-unused-types"},
 	{Name: "with_specification_extensions", Options: "base=testdata/with_specification_extensions/base.yaml,trim-unused-types"},
 	{Name: "additional_bindings"},

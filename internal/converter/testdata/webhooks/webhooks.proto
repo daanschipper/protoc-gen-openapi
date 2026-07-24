@@ -1,0 +1,50 @@
+// Tests that a message annotated (openapi.webhook_envelope) emits one OpenAPI 3.1
+// webhook per listed event, in list order (independent of oneof field order), each
+// narrowed to the named payload_field and grouped by its category tag.
+syntax = "proto3";
+
+package webhooks;
+
+import "openapi/annotations.proto";
+
+message Event {
+  option (openapi.webhook_envelope) = {
+    event: {
+      type: "payment.succeeded"
+      payload_field: "payment"
+      category: "Payment events"
+      description: "The payment was successfully authorized."
+    }
+    event: {
+      type: "payment.failed"
+      payload_field: "payment"
+      category: "Payment events"
+      description: "The authorization was declined or errored."
+    }
+    event: {
+      type: "refund.completed"
+      payload_field: "refund"
+      category: "Refund events"
+      description: "The refund was processed."
+    }
+  };
+
+  string object = 1;
+  string event_type = 2;
+  string event_time = 3;
+
+  oneof data {
+    Payment payment = 4;
+    Refund refund = 5;
+  }
+}
+
+message Payment {
+  string id = 1;
+  int64 amount = 2;
+}
+
+message Refund {
+  string id = 1;
+  string payment_id = 2;
+}

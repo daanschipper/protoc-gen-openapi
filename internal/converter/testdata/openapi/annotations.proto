@@ -14,10 +14,25 @@ message OpenApiFilterPrivate {
   optional bool private = 1;
 }
 
+message WebhookEventList {
+  repeated WebhookEvent event = 1;
+}
+
+message WebhookEvent {
+  string type = 1;
+  string payload_field = 2;
+  string category = 3;
+  string description = 4;
+}
+
 extend google.protobuf.MethodOptions {
   OpenApiOptions method_params = 2506;
 }
 
 extend google.protobuf.FieldOptions {
   OpenApiFilterPrivate field_params = 2506;
+}
+
+extend google.protobuf.MessageOptions {
+  WebhookEventList webhook_envelope = 2506;
 }
