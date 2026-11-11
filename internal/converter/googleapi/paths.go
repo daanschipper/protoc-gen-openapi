@@ -581,6 +581,10 @@ func flattenToParams(opts options.Options, md protoreflect.MessageDescriptor, pr
 	fields := md.Fields()
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
+		// A field that is filtered out of the schemas is not a query parameter either.
+		if schema.FieldFilteredOut(opts, md, field) {
+			continue
+		}
 		paramName := prefix + util.MakeFieldName(opts, field)
 		// exclude fields already found in the path
 		if _, ok := seen[string(field.FullName())]; ok {
